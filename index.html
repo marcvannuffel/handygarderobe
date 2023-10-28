@@ -8,30 +8,25 @@
     <style>
         #titel {
             position: fixed;
-            top: 10px;
+            bottom: 10px;
             right: 10px;
-            font-size: 18px;
+            font-size: smaller;
             color: #555;
         }
         .erreicht::after {
             content: '✓';
         }
-        /* Add any additional styling you need */
+        /* Weitere Styling-Regeln können Sie hier hinzufügen */
     </style>
 </head>
 <body>
     <div id="titel">
-        HandyGarberobe 1.0 <br>
-        <span style="font-size: 0.7em;">Idea by Carla & dudagroup.com coded by an AI</span>
+        HandyGarberobe 1.0<br>
+        Idea by Carla & dudagroup.com coded by an AI
     </div>
 
-    <!-- Your form and other HTML elements go here -->
-    <input type="number" id="nummerInput" placeholder="Nummer">
-    <input type="number" id="thrapyecesInput" placeholder="THRPYECES" value="1000000">
-    <button onclick="nummerHinzufuegen()">Hinzufügen</button>
-
-    <input type="number" id="zielZeit" placeholder="Zielzeit in Stunden" value="4">
-    <button onclick="zielzeitSetzen()">Zielzeit setzen</button>
+    <!-- Hier Ihr Formular und andere HTML-Elemente -->
+    <button onclick="nummerHinzufuegen()">It's MINE</button>
 
     <h2>Aktuelle Liste</h2>
     <ul id="nummerListe"></ul>
@@ -46,7 +41,7 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Completed entries will be listed here -->
+            <!-- Abgeschlossene Einträge werden hier aufgelistet -->
         </tbody>
     </table>
 
@@ -58,12 +53,12 @@
     </div>
 
     <script>
-        // Initialization of variables and logic for your application...
-        let nummernDaten = []; // This will hold the data for your numbers
-        let zielZeitInMillisekunden = 14400000; // Default 4 hours in milliseconds for the timer target
+        // Variableninitialisierung und Logik für Ihre Anwendung...
+        let nummernDaten = []; // Dies speichert die Daten für Ihre Nummern
+        let zielZeitInMillisekunden = 14400000; // Standard sind 4 Stunden in Millisekunden für das Timer-Ziel
         let miningAnzeigeTimer = null;
 
-        // We'll use the following function to save the current state to the local storage
+        // Diese Funktion speichert den aktuellen Stand im lokalen Speicher
         function speichernInLocalStorage() {
             const daten = {
                 nummern: nummernDaten,
@@ -72,114 +67,92 @@
             localStorage.setItem('handyGarderobeDaten', JSON.stringify(daten));
         }
 
-        // This function will be used to load the state from local storage
+        // Diese Funktion lädt den Stand aus dem lokalen Speicher
         function ladenAusLocalStorage() {
             const gespeicherteDaten = localStorage.getItem('handyGarderobeDaten');
             if (gespeicherteDaten) {
                 const daten = JSON.parse(gespeicherteDaten);
                 nummernDaten = daten.nummern;
                 zielZeitInMillisekunden = daten.zielZeit;
-                listeAktualisieren(); // We update our list based on the loaded data
+                listeAktualisieren(); // Wir aktualisieren unsere Liste basierend auf den geladenen Daten
             }
         }
 
-        // Function to handle adding a new number
+        // Funktion zur Handhabung des Hinzufügens einer neuen Nummer
         function nummerHinzufuegen() {
-            const nummer = document.getElementById('nummerInput').value;
-            const thrapyecesStartwert = document.getElementById('thrapyecesInput').value;
-            
+            // Zufällige Nummer für den Demonstrationszweck generieren
+            const nummer = Math.floor(Math.random() * 1000000);
+            const thrapyecesStartwert = 1000000; // Standardwert
+
             if (nummer) {
                 const neueNummer = {
                     nummer: nummer,
                     erfassungszeit: new Date(),
-                    thrapyeces: parseInt(thrapyecesStartwert, 10) // Parse the string to a number
+                    thrapyeces: parseInt(thrapyecesStartwert, 10) // Umwandlung der Zeichenkette in eine Zahl
                 };
 
                 nummernDaten.push(neueNummer);
                 listeAktualisieren();
-                speichernInLocalStorage(); // Save the new state to local storage
-                
-                // Clear the input field for new entries
-                document.getElementById('nummerInput').value = '';
+                speichernInLocalStorage(); // Speichern des neuen Zustands im lokalen Speicher
             } else {
                 alert('Bitte eine gültige Nummer eingeben.');
             }
         }
 
-        // Function to update the list displayed on the website
+        // Funktion zur Aktualisierung der auf der Website angezeigten Liste
         function listeAktualisieren() {
             const nummerListe = document.getElementById('nummerListe');
-            nummerListe.innerHTML = ''; // Clear the current list
+            nummerListe.innerHTML = ''; // Aktuelle Liste löschen
 
             nummernDaten.forEach((nummerDaten, index) => {
                 const zeitDiff = new Date() - new Date(nummerDaten.erfassungszeit);
                 const verbleibendeZeit = zielZeitInMillisekunden - zeitDiff;
 
-                // Here, you can calculate the color based on the remaining time
-                // And format how it's displayed, this is just a basic example
-                const prozent = Math.max((verbleibendeZeit / zielZeitInMillisekunden) * 100, 0);
-                const farbe = prozent > 50 ? 'green' : prozent > 25 ? 'orange' : 'red';
+                // Hier können Sie die Farbe basierend auf der verbleibenden Zeit anpassen
+                let prozentErreicht = (zeitDiff / zielZeitInMillisekunden) * 100;
+                let farbe = 'rgb(' + (100 - prozentErreicht) + '%, ' + prozentErreicht + '%, 0%)';
 
-                // Here we create a new list item for the number and add it to the list
+                // THRPYECES berechnen basierend auf der vergangenen Zeit
+                nummerDaten.thrapyeces += zeitDiff / zielZeitInMillisekunden * thrapyecesStartwert;
+
                 const listItem = document.createElement('li');
-                listItem.textContent = `Nummer: ${nummerDaten.nummer}, THRPYECES: ${nummerDaten.thrapyeces}, Verbleibende Zeit: ${Math.max(verbleibendeZeit / 1000, 0).toFixed(2)} Sekunden`;
+                listItem.innerHTML = `Nummer: ${nummerDaten.nummer}, THRPYECES: ${nummerDaten.thrapyeces.toFixed(0)}, Verbleibende Zeit: ${new Date(verbleibendeZeit).toISOString().substr(11, 8)}`;
                 listItem.style.color = farbe;
-                
-                // If the task is done, we add a specific class for styling
+
+                // Wenn die Aufgabe erledigt ist, fügen wir eine bestimmte Klasse für das Styling hinzu
                 if (verbleibendeZeit <= 0 && nummerDaten.thrapyeces >= 1000000) {
                     listItem.classList.add('erreicht');
-                    // Here, you could also remove the data from `nummernDaten` and add it to a 'completed' list
                     erledigteEintraegeHinzufuegen(nummerDaten);
                     nummernDaten.splice(index, 1);
                 }
 
                 nummerListe.appendChild(listItem);
             });
-            
-            // After updating the list, we save the current state
+
             speichernInLocalStorage();
         }
 
-        // Call this function when the page loads to initialize everything
+        // Laden der gespeicherten Daten und initialisieren des Mining-Anzeige-Bereichs beim Laden der Seite
         document.addEventListener('DOMContentLoaded', (event) => {
-            ladenAusLocalStorage(); // We load the saved state from local storage when the page loads
+            ladenAusLocalStorage();
             startMiningAnzeige();
         });
 
-        // Function to update the target time based on user input
-        function zielzeitSetzen() {
-            const zielZeitInStunden = document.getElementById('zielZeit').value;
-
-            if (zielZeitInStunden && zielZeitInStunden > 0) {
-                // We convert hours to milliseconds and update our target time
-                zielZeitInMillisekunden = zielZeitInStunden * 60 * 60 * 1000;
-                speichernInLocalStorage(); // Don't forget to save the new state
-            } else {
-                alert('Bitte eine gültige Anzahl von Stunden eingeben.');
-            }
-        }
-
         function erledigteEintraegeHinzufuegen(nummerDaten) {
-            // Get the table body where we'll add a new row for the completed entry
             const erledigteListeBody = document.getElementById('erledigteListe').querySelector('tbody');
-            
-            // Create a new row and cells
             const neueZeile = erledigteListeBody.insertRow();
             const zelleNummer = neueZeile.insertCell(0);
             const zelleThrapyeces = neueZeile.insertCell(1);
             const zelleStatus = neueZeile.insertCell(2);
 
-            // Add the text to the cells
             zelleNummer.textContent = nummerDaten.nummer;
             zelleThrapyeces.textContent = nummerDaten.thrapyeces;
-            zelleStatus.textContent = 'Done'; // You can replace this with any other indication or icon
-
-            // Here, you could also handle the removal of the entry from the original list, if it hasn't been handled elsewhere
+            zelleStatus.textContent = 'Done';
         }
 
         function startMiningAnzeige() {
             if (miningAnzeigeTimer) {
-                clearInterval(miningAnzeigeTimer); // Clear the existing timer
+                clearInterval(miningAnzeigeTimer);
             }
 
             miningAnzeigeTimer = setInterval(() => {
@@ -187,12 +160,11 @@
                     const randomIndex = Math.floor(Math.random() * nummernDaten.length);
                     const zufaelligeNummerDaten = nummernDaten[randomIndex];
 
-                    // Display the details in your mining display area
                     document.getElementById('aktiveNummerAnzeige').textContent = zufaelligeNummerDaten.nummer;
                     document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: ' + (new Date() - new Date(zufaelligeNummerDaten.erfassungszeit)) / 1000 + ' Sekunden';
                     document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: ' + zufaelligeNummerDaten.thrapyeces;
                 }
-            }, 5000); // Update every 5 seconds
+            }, 5000);
         }
     </script>
 </body>
