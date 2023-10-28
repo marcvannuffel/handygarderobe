@@ -61,7 +61,10 @@
     </div>
 
     <!-- Hier Ihr Formular und andere HTML-Elemente -->
-    <button onclick="nummerHinzufuegen()">It's MINE</button>
+    <div id="eingabeBereich">
+        <input type="number" id="nummerEingabe" placeholder="Nummer eingeben" required>
+        <button onclick="nummerHinzufuegen()">It's MINE</button>
+    </div>
 
     <h2>Aktuelle Liste</h2>
     <ul id="nummerListe"></ul>
