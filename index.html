@@ -1,130 +1,199 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Handy Garderobe</title>
-<style>
-  /* Basis-CSS für die Liste, kann erweitert werden */
-  .erreicht { font-weight: bold; }
-</style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Handy Garderobe</title>
+    <style>
+        #titel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 18px;
+            color: #555;
+        }
+        .erreicht::after {
+            content: '✓';
+        }
+        /* Add any additional styling you need */
+    </style>
 </head>
 <body>
+    <div id="titel">
+        HandyGarberobe 1.0 <br>
+        <span style="font-size: 0.7em;">Idea by Carla & dudagroup.com coded by an AI</span>
+    </div>
 
-<h1>Handy Garderobe</h1>
+    <!-- Your form and other HTML elements go here -->
+    <input type="number" id="nummerInput" placeholder="Nummer">
+    <input type="number" id="thrapyecesInput" placeholder="THRPYECES" value="1000000">
+    <button onclick="nummerHinzufuegen()">Hinzufügen</button>
 
-<label for="nummerInput">Handynummer eingeben:</label>
-<input type="text" id="nummerInput">
-<button onclick="nummerHinzufuegen()">Erfassen</button>
+    <input type="number" id="zielZeit" placeholder="Zielzeit in Stunden" value="4">
+    <button onclick="zielzeitSetzen()">Zielzeit setzen</button>
 
-<br><br>
+    <h2>Aktuelle Liste</h2>
+    <ul id="nummerListe"></ul>
 
-<label for="zielZeit">Zielzeit in Stunden:</label>
-<input type="number" id="zielZeit" value="4" min="0"> <!-- Standard auf 4 Stunden gesetzt -->
-<button onclick="zielzeitSetzen()">Zielzeit setzen</button>
+    <h2>Erledigte Einträge</h2>
+    <table id="erledigteListe">
+        <thead>
+            <tr>
+                <th>Nummer</th>
+                <th>THRPYECES</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Completed entries will be listed here -->
+        </tbody>
+    </table>
 
-<h2>Liste der erfassten Nummern</h2>
-<ul id="nummerListe"></ul>
+    <div id="miningAnzeigeBereich" style="position: fixed; top: 20px; right: 20px; padding: 20px; border: 1px solid black;">
+        <h2>Mining</h2>
+        <div id="aktiveNummerAnzeige">--</div>
+        <div id="aktiveZeitAnzeige">Zeit: --</div>
+        <div id="aktiveThrapyecesAnzeige">THRPYECES: --</div>
+    </div>
 
-<script>
-  let nummernDaten = [];
-let zielZeitInMillisekunden = 4 * 60 * 60 * 1000; // Standardmäßig auf 4 Stunden gesetzt
+    <script>
+        // Initialization of variables and logic for your application...
+        let nummernDaten = []; // This will hold the data for your numbers
+        let zielZeitInMillisekunden = 14400000; // Default 4 hours in milliseconds for the timer target
+        let miningAnzeigeTimer = null;
 
-function zielzeitSetzen() {
-  const stunden = document.getElementById('zielZeit').value;
-  zielZeitInMillisekunden = stunden * 60 * 60 * 1000; // Umrechnung in Millisekunden
-}
+        // We'll use the following function to save the current state to the local storage
+        function speichernInLocalStorage() {
+            const daten = {
+                nummern: nummernDaten,
+                zielZeit: zielZeitInMillisekunden
+            };
+            localStorage.setItem('handyGarderobeDaten', JSON.stringify(daten));
+        }
 
-function nummerHinzufuegen() {
-  const nummer = document.getElementById('nummerInput').value;
-  const jetzt = new Date();
-  const nummerInfo = {
-    nummer,
-    erfassungszeit: jetzt,
-    timer: null,
-  };
+        // This function will be used to load the state from local storage
+        function ladenAusLocalStorage() {
+            const gespeicherteDaten = localStorage.getItem('handyGarderobeDaten');
+            if (gespeicherteDaten) {
+                const daten = JSON.parse(gespeicherteDaten);
+                nummernDaten = daten.nummern;
+                zielZeitInMillisekunden = daten.zielZeit;
+                listeAktualisieren(); // We update our list based on the loaded data
+            }
+        }
 
-  nummerInfo.timer = setInterval(() => {
-    aktualisiereNummer(nummerInfo);
-  }, 1000);
+        // Function to handle adding a new number
+        function nummerHinzufuegen() {
+            const nummer = document.getElementById('nummerInput').value;
+            const thrapyecesStartwert = document.getElementById('thrapyecesInput').value;
+            
+            if (nummer) {
+                const neueNummer = {
+                    nummer: nummer,
+                    erfassungszeit: new Date(),
+                    thrapyeces: parseInt(thrapyecesStartwert, 10) // Parse the string to a number
+                };
 
-  nummernDaten.push(nummerInfo);
-  listeAktualisieren();
-  document.getElementById('nummerInput').value = '';
-}
+                nummernDaten.push(neueNummer);
+                listeAktualisieren();
+                speichernInLocalStorage(); // Save the new state to local storage
+                
+                // Clear the input field for new entries
+                document.getElementById('nummerInput').value = '';
+            } else {
+                alert('Bitte eine gültige Nummer eingeben.');
+            }
+        }
 
-function aktualisiereNummer(nummerInfo) {
-  const aktuelleZeit = new Date();
-  const differenz = zielZeitInMillisekunden - (aktuelleZeit - nummerInfo.erfassungszeit); // Berechnet die verbleibende Zeit
-  const prozent = Math.min((aktuelleZeit - nummerInfo.erfassungszeit) / zielZeitInMillisekunden * 100, 100);
+        // Function to update the list displayed on the website
+        function listeAktualisieren() {
+            const nummerListe = document.getElementById('nummerListe');
+            nummerListe.innerHTML = ''; // Clear the current list
 
-  if (differenz <= 0) {
-    clearInterval(nummerInfo.timer);
-    nummerInfo.timer = null;
-  }
+            nummernDaten.forEach((nummerDaten, index) => {
+                const zeitDiff = new Date() - new Date(nummerDaten.erfassungszeit);
+                const verbleibendeZeit = zielZeitInMillisekunden - zeitDiff;
 
-  // Berechnung der verbleibenden Stunden, Minuten und Sekunden
-  const verbleibendeStunden = Math.floor(differenz / (1000 * 60 * 60));
-  const verbleibendeMinuten = Math.floor((differenz % (1000 * 60 * 60)) / (1000 * 60));
-  const verbleibendeSekunden = Math.floor((differenz % (1000 * 60)) / 1000);
+                // Here, you can calculate the color based on the remaining time
+                // And format how it's displayed, this is just a basic example
+                const prozent = Math.max((verbleibendeZeit / zielZeitInMillisekunden) * 100, 0);
+                const farbe = prozent > 50 ? 'green' : prozent > 25 ? 'orange' : 'red';
 
-  // Farbübergang von Rot zu Grün
-  const rot = (100 - prozent) * 2.55;
-  const gruen = prozent * 2.55;
-  const farbe = `rgb(${rot}, ${gruen}, 0)`;
+                // Here we create a new list item for the number and add it to the list
+                const listItem = document.createElement('li');
+                listItem.textContent = `Nummer: ${nummerDaten.nummer}, THRPYECES: ${nummerDaten.thrapyeces}, Verbleibende Zeit: ${Math.max(verbleibendeZeit / 1000, 0).toFixed(2)} Sekunden`;
+                listItem.style.color = farbe;
+                
+                // If the task is done, we add a specific class for styling
+                if (verbleibendeZeit <= 0 && nummerDaten.thrapyeces >= 1000000) {
+                    listItem.classList.add('erreicht');
+                    // Here, you could also remove the data from `nummernDaten` and add it to a 'completed' list
+                    erledigteEintraegeHinzufuegen(nummerDaten);
+                    nummernDaten.splice(index, 1);
+                }
 
-  const liElement = document.getElementById('nummer-' + nummerInfo.nummer);
-  if (liElement) {
-    liElement.style.color = farbe;
+                nummerListe.appendChild(listItem);
+            });
+            
+            // After updating the list, we save the current state
+            speichernInLocalStorage();
+        }
 
-    // Aktualisieren des Textinhalts mit Countdown
-    liElement.textContent = `Nummer: ${nummerInfo.nummer} | Verbleibend: ${verbleibendeStunden}h ${verbleibendeMinuten}m ${verbleibendeSekunden}s`;
-    if (nummerInfo.timer === null) {
-      liElement.classList.add('erreicht');
-      liElement.textContent += " (Erreicht)";
-    }
+        // Call this function when the page loads to initialize everything
+        document.addEventListener('DOMContentLoaded', (event) => {
+            ladenAusLocalStorage(); // We load the saved state from local storage when the page loads
+            startMiningAnzeige();
+        });
 
-    // Löschen-Button sollte beibehalten werden, auch wenn der Text aktualisiert wird
-    const loeschButton = document.createElement('button');
-    loeschButton.textContent = 'Löschen';
-    loeschButton.onclick = function() {
-      clearInterval(nummerInfo.timer);
-      nummernDaten = nummernDaten.filter(info => info.nummer !== nummerInfo.nummer);
-      listeAktualisieren();
-    };
-    liElement.appendChild(loeschButton);
-  }
-}
+        // Function to update the target time based on user input
+        function zielzeitSetzen() {
+            const zielZeitInStunden = document.getElementById('zielZeit').value;
 
-function listeAktualisieren() {
-  const nummerListe = document.getElementById('nummerListe');
-  nummerListe.innerHTML = ''; // Liste leeren
+            if (zielZeitInStunden && zielZeitInStunden > 0) {
+                // We convert hours to milliseconds and update our target time
+                zielZeitInMillisekunden = zielZeitInStunden * 60 * 60 * 1000;
+                speichernInLocalStorage(); // Don't forget to save the new state
+            } else {
+                alert('Bitte eine gültige Anzahl von Stunden eingeben.');
+            }
+        }
 
-  nummernDaten.forEach(nummerInfo => {
-    const li = document.createElement('li');
-    li.id = 'nummer-' + nummerInfo.nummer;
-    li.textContent = `Nummer: ${nummerInfo.nummer}`; // Initialer Text, wird später im Countdown aktualisiert
+        function erledigteEintraegeHinzufuegen(nummerDaten) {
+            // Get the table body where we'll add a new row for the completed entry
+            const erledigteListeBody = document.getElementById('erledigteListe').querySelector('tbody');
+            
+            // Create a new row and cells
+            const neueZeile = erledigteListeBody.insertRow();
+            const zelleNummer = neueZeile.insertCell(0);
+            const zelleThrapyeces = neueZeile.insertCell(1);
+            const zelleStatus = neueZeile.insertCell(2);
 
-    const loeschButton = document.createElement('button');
-    loeschButton.textContent = 'Löschen';
-    loeschButton.onclick = function() {
-      clearInterval(nummerInfo.timer);
-      nummernDaten = nummernDaten.filter(info => info.nummer !== nummerInfo.nummer);
-      listeAktualisieren();
-    };
+            // Add the text to the cells
+            zelleNummer.textContent = nummerDaten.nummer;
+            zelleThrapyeces.textContent = nummerDaten.thrapyeces;
+            zelleStatus.textContent = 'Done'; // You can replace this with any other indication or icon
 
-    li.appendChild(loeschButton);
-    nummerListe.appendChild(li);
+            // Here, you could also handle the removal of the entry from the original list, if it hasn't been handled elsewhere
+        }
 
-    // Erstes Update direkt nach dem Erstellen des Listenelements
-    aktualisiereNummer(nummerInfo);
-  });
-}
+        function startMiningAnzeige() {
+            if (miningAnzeigeTimer) {
+                clearInterval(miningAnzeigeTimer); // Clear the existing timer
+            }
 
-// Initialisiert das Ziel beim ersten Laden
-zielzeitSetzen();
+            miningAnzeigeTimer = setInterval(() => {
+                if (nummernDaten.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * nummernDaten.length);
+                    const zufaelligeNummerDaten = nummernDaten[randomIndex];
 
-</script>
-
+                    // Display the details in your mining display area
+                    document.getElementById('aktiveNummerAnzeige').textContent = zufaelligeNummerDaten.nummer;
+                    document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: ' + (new Date() - new Date(zufaelligeNummerDaten.erfassungszeit)) / 1000 + ' Sekunden';
+                    document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: ' + zufaelligeNummerDaten.thrapyeces;
+                }
+            }, 5000); // Update every 5 seconds
+        }
+    </script>
 </body>
 </html>
