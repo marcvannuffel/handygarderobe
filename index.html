@@ -207,39 +207,50 @@
         }
 
         function aktualisiereMiningAnzeige() {
-            if (nummerListe.length === 0) {
-                // Wenn keine Nummern vorhanden sind, leeren Sie die Mining-Anzeige.
-                document.getElementById('miningAnzeigeBereich').innerHTML = 'Keine aktiven Minings';
-                return;
-            }
-            
-            let aktiveNummerIndex = Math.floor(Math.random() * nummerListe.length);
-            let aktiveNummerInfo = nummerListe[aktiveNummerIndex];
-            let miningAnzeigeBereich = document.getElementById('miningAnzeigeBereich');
-        
-            // Funktion, um die Mining-Anzeige mit den aktuellen Werten zu aktualisieren.
-            function refreshMiningInfo() {
-                // Ermitteln Sie den aktuellen Status basierend auf den Eigenschaften des aktiven Eintrags.
-                let verstricheneZeit = Math.floor((new Date() - aktiveNummerInfo.startZeit) / 1000); // in Sekunden
-                aktiveNummerInfo.verbleibendeZeit = Math.max(aktiveNummerInfo.zielZeit - verstricheneZeit, 0);
-                aktiveNummerInfo.thrapyeces = Math.min(aktiveNummerInfo.thrapyeces + verstricheneZeit * aktiveNummerInfo.thrapyecesRate, aktiveNummerInfo.zielThrapyeces);
-                
-                // Aktualisieren Sie die HTML-Inhalte der Mining-Anzeige.
-                miningAnzeigeBereich.innerHTML = `
-                    <h2>Aktive Mining-Nummer: ${aktiveNummerInfo.nummer}</h2>
-                    <p>Verbleibende Zeit: ${sekundenZuHMS(aktiveNummerInfo.verbleibendeZeit)}</p>
-                    <p>THRPYECES: ${aktiveNummerInfo.thrapyeces.toFixed(2)}</p>
-                `;
+            // Stellen Sie sicher, dass das Intervall zurückgesetzt wird, wenn es bereits läuft
+            if (miningInterval) {
+                clearInterval(miningInterval);
             }
         
-            // Starten Sie den Refresh-Intervall (jede Sekunde).
-            const refreshInterval = setInterval(refreshMiningInfo, 1000);
-            
-            // Nach 3 Sekunden den Intervall beenden und eine neue Nummer wählen.
-            setTimeout(() => {
-                clearInterval(refreshInterval); // Stoppen Sie das aktuelle Update.
-                aktualisiereMiningAnzeige(); // Starten Sie die Funktion erneut, um eine neue Nummer zu wählen.
-            }, 3000);
+            let miningIndex = 0;
+        
+            miningInterval = setInterval(() => {
+                if (nummerListe.length === 0) {
+                    clearInterval(miningInterval);
+                    return;
+                }
+        
+                // Hier sichern wir, dass miningIndex innerhalb des gültigen Bereichs des Arrays bleibt
+                miningIndex = miningIndex % nummerListe.length;
+        
+                const aktiverEintrag = nummerListe[miningIndex];
+                if (aktiverEintrag) {
+                    // Stellen Sie sicher, dass die Werte gültige Zahlen sind, bevor Sie Berechnungen durchführen
+                    const verbleibendeSekunden = Number(aktiverEintrag.verbleibendeZeit); // Dies sollte eine Zahl sein
+                    const thrapyeces = Number(aktiverEintrag.thrapyeces); // Dies sollte eine Zahl sein
+        
+                    if (!isNaN(verbleibendeSekunden) && !isNaN(thrapyeces)) {
+                        // Wenn beide Werte gültige Zahlen sind, führen Sie die Operationen aus
+                        const verbleibendeZeitHMS = sekundenZuHMS(verbleibendeSekunden);
+                        const thrapyecesAnzeige = thrapyeces.toFixed(2); // Nehmen Sie nur zwei Dezimalstellen
+        
+                        // Aktualisieren Sie die Anzeige mit den neuen gültigen Werten
+                        document.getElementById('aktiveZeitAnzeige').textContent = 'Verbleibende Zeit: ' + verbleibendeZeitHMS;
+                        document.getElementById('aktiveThrapyecesAnzeige').textContent = 'Typface: ' + thrapyecesAnzeige;
+                    } else {
+                        // Fehlerbehandlung, falls einer der Werte ungültig ist
+                        console.error("Ungültige Werte gefunden. Verbleibende Zeit:", verbleibendeSekunden, "Typface:", thrapyeces);
+                    }
+                }
+        
+                // Schalten Sie den Index um, damit der nächste Eintrag im nächsten Intervall angezeigt wird
+                miningIndex++;
+        
+                // Wenn 3 Sekunden (3 Intervalle) vergangen sind, setzen Sie den miningIndex zurück, damit die gleiche Information für 3 Sekunden angezeigt bleibt
+                if (miningIndex % 3 === 0) {
+                    // Hier können Sie zusätzliche Logik hinzufügen, wenn der Index zurückgesetzt wird
+                }
+            }, 1000); // Aktualisieren jede Sekunde
         }
 
         function anwendungZuruecksetzen() {
