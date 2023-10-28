@@ -42,6 +42,15 @@
             content: '✓';
             color: lime;
         }
+        .delete-btn, .delete-confirmed-btn {
+            background-color: red;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -52,13 +61,13 @@
 
     <!-- Erfassungsformular -->
     <div id="erfassungsFormular">
-        <label for="nummerInput">Nummer:</label>
+        <label for="nummerInput">Nummer:</label> <!-- Beschriftung hinzugefügt -->
         <input type="text" id="nummerInput" placeholder="Nummer">
         
-        <label for="zielZeitInput">Zielzeit (Stunden):</label>
+        <label for="zielZeitInput">Zielzeit (Stunden):</label> <!-- Beschriftung hinzugefügt -->
         <input type="number" id="zielZeitInput" placeholder="Zielzeit in Stunden" min="0" step="0.01" value="4">
         
-        <label for="thrapyecesInput">THRPYECES:</label>
+        <label for="thrapyecesInput">THRPYECES:</label> <!-- Beschriftung hinzugefügt -->
         <input type="number" id="thrapyecesInput" placeholder="THRPYECES" min="1" value="1000000">
         
         <button onclick="nummerHinzufuegen()">It's MINE</button>
@@ -97,11 +106,7 @@
                 return;
             }
 
-            if (!nummer || isNaN(zielZeitInStunden) || isNaN(zielThrapyeces)) {
-                alert('Bitte gültige Werte eingeben.');
-                return;
-            }
-
+            if (!nummer || isNaN(zielZeitInStunden) oder ohne Inhalt
             const zielZeit = zielZeitInStunden * 3600; // Umrechnung von Stunden in Sekunden
             const neuesElement = {
                 nummer,
@@ -143,92 +148,82 @@
                 } else {
                     const liElement = document.createElement('li');
                     liElement.textContent = `Nummer: ${item.nummer}, Zeit: ${new Date(item.verbleibendeZeit * 1000).toISOString().substr(11, 8)}, THRPYECES: ${Math.floor(item.thrapyeces)}`;
+
+                    // Löschtaste für jeden Eintrag
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Löschen';
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.onclick = function() {
+                        const confirmBtn = document.createElement('button');
+                        confirmBtn.textContent = 'Bestätigen';
+                        confirmBtn.className = 'delete-confirmed-btn';
+                        confirmBtn.onclick = function() {
+                            const index = nummerListe.indexOf(item);
+                            nummerListe.splice(index, 1);
+                            localStorage.setItem('nummerListe', JSON.stringify(nummerListe));
+                            aktualisiereNummerListe();
+                        };
+                        liElement.appendChild(confirmBtn);
+                        deleteBtn.style.display = 'none';
+                    };
+                    liElement.appendChild(deleteBtn);
+
                     listeDiv.appendChild(liElement);
                 }
             });
 
-            nummerListe = nummerListe.filter(item => item.status !== 'done'); // Entfernt erledigte Aufgaben aus der aktuellen Liste
-
-            // Update local storage after filtering
+            // Entferne erledigte Aufgaben aus der aktuellen Liste
+            nummerListe = nummerListe.filter(item => item.status !== 'done');
             localStorage.setItem('nummerListe', JSON.stringify(nummerListe));
 
+            // Aktualisiere die erledigte Liste
             aktualisiereErledigteListe();
         }
 
         function aktualisiereErledigteListe() {
-            const erledigteListeElement = document.getElementById('erledigteListe');
-            erledigteListeElement.innerHTML = ''; // Aktuelle Liste leeren
+            const erledigteDiv = document.getElementById('erledigteListe');
+            erledigteDiv.innerHTML = ''; // Clear current completed list
 
-            erledigteListe.forEach((item, index) => {
-                const liElement = document.createElement('li');
-                liElement.textContent = `Nummer: ${item.nummer}, THRPYECES: ${Math.floor(item.thrapyeces)}`;
-                liElement.className = 'erreicht';
-
-                const loeschButton = document.createElement('button');
-                loeschButton.textContent = 'Löschen';
-                loeschButton.onclick = function() {
-                    if (confirm('Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?')) {
-                        // Doppelte Bestätigung
-                        if (confirm('Bitte bestätigen Sie erneut, um diesen Eintrag endgültig zu löschen.')) {
-                            erledigteListe.splice(index, 1); // Element aus der Liste entfernen
-                            localStorage.setItem('erledigteListe', JSON.stringify(erledigteListe)); // LocalStorage aktualisieren
-                            aktualisiereErledigteListe(); // Liste erneut aktualisieren
-                        }
-                    }
-                };
-
-                liElement.appendChild(loeschButton);
-                erledigteListeElement.appendChild(liElement);
+            erledigteListe.forEach(item => {
+                const divElement = document.createElement('div');
+                divElement.textContent = `Nummer: ${item.nummer}, Ziel erreicht in: ${new Date(item.zielZeit * 1000).toISOString().substr(11, 8)}, THRPYECES: ${item.zielThrapyeces}`;
+                divElement.className = 'erreicht';
+                erledigteDiv.appendChild(divElement);
             });
         }
 
-        // Animations-Loop für das "Mining"
-        function miningAnimation() {
-            if (nummerListe.length === 0) {
-                // Wenn keine Nummern vorhanden sind
+        // Diese Funktion aktualisiert die Mining-Anzeige
+        function aktualisiereMiningAnzeige() {
+            if (!nummerListe.length) {
                 document.getElementById('aktiveNummerAnzeige').textContent = '--';
                 document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: --';
                 document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: --';
-            } else {
-                // Rotieren durch die Nummernliste
-                if (miningIndex >= nummerListe.length) {
-                    miningIndex = 0; // Zurücksetzen des Index
-                }
-
-                const aktivesElement = nummerListe[miningIndex];
-                document.getElementById('aktiveNummerAnzeige').textContent = aktivesElement.nummer;
-                document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: ' + new Date(aktivesElement.verbleibendeZeit * 1000).toISOString().substr(11, 8);
-                document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: ' + Math.floor(aktivesElement.thrapyeces);
-
-                miningIndex++;
+                return;
             }
 
-            requestAnimationFrame(miningAnimation);
+            if (miningIndex >= nummerListe.length) {
+                miningIndex = 0;
+            }
+
+            const aktiveNummer = nummerListe[miningIndex];
+            document.getElementById('aktiveNummerAnzeige').textContent = aktiveNummer.nummer;
+            document.getElementById('aktiveZeitAnzeige').textContent = `Zeit: ${new Date(aktiveNummer.verbleibendeZeit * 1000).toISOString().substr(11, 8)}`;
+            document.getElementById('aktiveThrapyecesAnzeige').textContent = `THRPYECES: ${Math.floor(aktiveNummer.thrapyeces)}`;
+
+            // Nächstes Element für das Mining
+            miningIndex++;
         }
 
-        // Sekündlicher Timer, um die Liste und THRPYECES zu aktualisieren
+        // Intervall, das die Funktionen regelmäßig aufruft, um die Anzeige zu aktualisieren
         setInterval(() => {
-            aktualisiereNummerListe(); // Aktualisiere die Anzeige
-            // Einträge, die die Bedingung erfüllen, automatisch in die erledigte Liste verschieben
-            nummerListe.forEach((item, index) => {
-                if (item.verbleibendeZeit <= 0 && item.thrapyeces >= item.zielThrapyeces && !erledigteListe.includes(item)) {
-                    erledigteListe.push(item);
-                    nummerListe.splice(index, 1); // Element aus der aktuellen Liste entfernen
-                    localStorage.setItem('erledigteListe', JSON.stringify(erledigteListe)); // LocalStorage aktualisieren
-                    localStorage.setItem('nummerListe', JSON.stringify(nummerListe)); // Aktualisierte aktuelle Liste speichern
-                }
-            });
-            aktualisiereErledigteListe(); // Aktualisiere die Liste der erledigten Einträge
-        }, 1000);
-
-        // Start der Mining-Animation, wenn die Seite geladen wird
-        miningAnimation();
-
-        // Initialisierung beim Laden der Seite
-        window.onload = () => {
             aktualisiereNummerListe();
-            aktualisiereErledigteListe(); // Stellen Sie sicher, dass die Liste beim Laden der Seite aktualisiert wird
-        };
+            aktualisiereMiningAnzeige();
+        }, 1000); // Aktualisiert jede Sekunde
+
+        // Initialisiert die Anzeige beim ersten Laden
+        aktualisiereNummerListe();
+        aktualisiereErledigteListe();
+        aktualisiereMiningAnzeige();
     </script>
 </body>
 </html>
