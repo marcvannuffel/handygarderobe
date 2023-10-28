@@ -101,6 +101,19 @@
         let erledigteListe = JSON.parse(localStorage.getItem('erledigteListe')) || [];
         let miningInterval, refreshListInterval;
 
+        function sekundenZuHMS(sekunden) {
+            let h = Math.floor(sekunden / 3600); // Stunden erhalten
+            let m = Math.floor(sekunden % 3600 / 60); // Minuten erhalten
+            let s = Math.floor(sekunden % 3600 % 60); // Sekunden erhalten
+        
+            // Werte in ein zwei Ziffern Format umwandeln
+            let hAnzeige = h < 10 ? "0" + h : h;
+            let mAnzeige = m < 10 ? "0" + m : m;
+            let sAnzeige = s < 10 ? "0" + s : s;
+        
+            return hAnzeige + ":" + mAnzeige + ":" + sAnzeige; // formatieren als "HH:MM:SS"
+        }
+        
         function nummerHinzufuegen() {
             const nummer = document.getElementById('nummerInput').value.trim();
             const zielZeitInStunden = parseFloat(document.getElementById('zielZeitInput').value);
