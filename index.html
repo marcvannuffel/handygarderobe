@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -16,8 +16,7 @@
             position: fixed;
             bottom: 10px;
             right: 10px;
-            font-size: 12px;
-            color: green;  /* Diese Zeile stellt sicher, dass der Text grün ist */
+            color: green; /* Stellen Sie sicher, dass der Footer-Text grün ist */
         }
         #erfassungsFormular input, #erfassungsFormular button {
             display: block;
@@ -40,6 +39,7 @@
             content: '✓';
             color: lime;
         }
+        /* Zusätzlicher Stil für Einträge, die das Ziel erreicht haben, könnte hier hinzugefügt werden. */
     </style>
 </head>
 <body>
@@ -51,7 +51,7 @@
     <!-- Erfassungsformular -->
     <div id="erfassungsFormular">
         <input type="text" id="nummerInput" placeholder="Nummer">
-        <input type="number" id="zielZeitInput" placeholder="Zielzeit in Sekunden" value="14400">
+        <input type="number" id="zielZeitInput" placeholder="Zielzeit in Stunden" min="0" step="0.01">
         <input type="number" id="thrapyecesInput" placeholder="THRPYECES" value="1000000">
         <button onclick="nummerHinzufuegen()">It's MINE</button>
     </div>
@@ -62,9 +62,7 @@
 
     <!-- Erledigte Einträge -->
     <h2>Erledigte Einträge</h2>
-    <div id="erledigteListe">
-        <!-- Completed entries will be listed here -->
-    </div>
+    <div id="erledigteListe"></div>
 
     <!-- Mining Anzeige -->
     <div id="miningAnzeigeBereich">
@@ -75,119 +73,112 @@
     </div>
 
     <script>
-        // Variableninitialisierung und Logik für Ihre Anwendung...
-        let nummernDaten = []; // Dies speichert die Daten für Ihre Nummern
-        let zielZeitInMillisekunden = 14400000; // Standard sind 4 Stunden in Millisekunden für das Timer-Ziel
-        let miningAnzeigeTimer = null;
+        // Definieren Sie globale Variablen
+        let nummerListe = [];
+        const erledigteListe = [];
+        let miningIndex = 0;
 
-        // Diese Funktion speichert den aktuellen Stand im lokalen Speicher
-        function speichernInLocalStorage() {
-            const daten = {
-                nummern: nummernDaten,
-                zielZeit: zielZeitInMillisekunden
-            };
-            localStorage.setItem('handyGarderobeDaten', JSON.stringify(daten));
-        }
-
-        // Diese Funktion lädt den Stand aus dem lokalen Speicher
-        function ladenAusLocalStorage() {
-            const gespeicherteDaten = localStorage.getItem('handyGarderobeDaten');
-            if (gespeicherteDaten) {
-                const daten = JSON.parse(gespeicherteDaten);
-                nummernDaten = daten.nummern;
-                zielZeitInMillisekunden = daten.zielZeit;
-                listeAktualisieren(); // Wir aktualisieren unsere Liste basierend auf den geladenen Daten
-            }
-        }
-
-        // Funktion zur Handhabung des Hinzufügens einer neuen Nummer
         function nummerHinzufuegen() {
-            // Zufällige Nummer für den Demonstrationszweck generieren
-            const nummer = Math.floor(Math.random() * 1000000);
-            const thrapyecesStartwert = 1000000; // Standardwert
+            const nummer = document.getElementById('nummerInput').value.trim();
+            const zielZeitInStunden = parseFloat(document.getElementById('zielZeitInput').value);
+            const thrapyecesStart = parseInt(document.getElementById('thrapyecesInput').value, 10);
 
-            if (nummer) {
-                const neueNummer = {
-                    nummer: nummer,
-                    erfassungszeit: new Date(),
-                    thrapyeces: parseInt(thrapyecesStartwert, 10) // Umwandlung der Zeichenkette in eine Zahl
+            // Überprüfen, ob die Nummer bereits existiert
+            if (nummerListe.some(item => item.nummer === nummer)) {
+                alert('Diese Nummer existiert bereits.');
+                return;
+            }
+
+            if (!nummer || isNaN(zielZeitInStunden) || isNaN(thrapyecesStart)) {
+                alert('Bitte gültige Werte eingeben.');
+                return;
+            }
+
+            const zielZeit = zielZeitInStunden * 3600; // Umrechnung von Stunden in Sekunden
+            const neuesElement = {
+                nummer,
+                erstellungszeit: new Date(),
+                zielZeit,
+                thrapyeces: thrapyecesStart,
+                verbleibendeZeit: zielZeit, // Sekunden bis zum Ziel
+            };
+            nummerListe.push(neuesElement);
+            aktualisiereNummerListe();
+            document.getElementById('nummerInput').value = ''; // Eingabefeld zurücksetzen
+        }
+
+        function aktualisiereNummerListe() {
+            const ul = document.getElementById('nummerListe');
+            ul.innerHTML = ''; // Liste leeren
+
+            nummerListe.forEach((item, index) => {
+                const verbleibendeSekunden = item.zielZeit - ((new Date() - item.erstellungszeit) / 1000);
+                if (verbleibendeSekunden <= 0) {
+                    erledigteListe.push({...item, status: 'done'});
+                    return; // Überspringen, wenn die Zeit abgelaufen ist
+                }
+
+                item.verbleibendeZeit = verbleibendeSekunden; // Aktualisiere die verbleibende Zeit
+
+                const li = document.createElement('li');
+                li.textContent = `Nummer: ${item.nummer}, Verbleibende Zeit: ${verbleibendeSekunden.toFixed(2)} Sekunden, THRPYECES: ${item.thrapyeces}`;
+
+                // Button zum Entfernen
+                const entfernenButton = document.createElement('button');
+                entfernenButton.textContent = 'Entfernen';
+                entfernenButton.onclick = function() {
+                    nummerListe = nummerListe.filter((e, i) => i !== index); // Entferne diesen Eintrag
+                    aktualisiereNummerListe(); // Liste erneut aktualisieren
                 };
 
-                nummernDaten.push(neueNummer);
-                listeAktualisieren();
-                speichernInLocalStorage(); // Speichern des neuen Zustands im lokalen Speicher
-            } else {
-                alert('Bitte eine gültige Nummer eingeben.');
-            }
-        }
-
-        // Funktion zur Aktualisierung der auf der Website angezeigten Liste
-        function listeAktualisieren() {
-            const nummerListe = document.getElementById('nummerListe');
-            nummerListe.innerHTML = ''; // Aktuelle Liste löschen
-
-            nummernDaten.forEach((nummerDaten, index) => {
-                const zeitDiff = new Date() - new Date(nummerDaten.erfassungszeit);
-                const verbleibendeZeit = zielZeitInMillisekunden - zeitDiff;
-
-                // Hier können Sie die Farbe basierend auf der verbleibenden Zeit anpassen
-                let prozentErreicht = (zeitDiff / zielZeitInMillisekunden) * 100;
-                let farbe = 'rgb(' + (100 - prozentErreicht) + '%, ' + prozentErreicht + '%, 0%)';
-
-                // THRPYECES berechnen basierend auf der vergangenen Zeit
-                nummerDaten.thrapyeces += zeitDiff / zielZeitInMillisekunden * thrapyecesStartwert;
-
-                const listItem = document.createElement('li');
-                listItem.innerHTML = `Nummer: ${nummerDaten.nummer}, THRPYECES: ${nummerDaten.thrapyeces.toFixed(0)}, Verbleibende Zeit: ${new Date(verbleibendeZeit).toISOString().substr(11, 8)}`;
-                listItem.style.color = farbe;
-
-                // Wenn die Aufgabe erledigt ist, fügen wir eine bestimmte Klasse für das Styling hinzu
-                if (verbleibendeZeit <= 0 && nummerDaten.thrapyeces >= 1000000) {
-                    listItem.classList.add('erreicht');
-                    erledigteEintraegeHinzufuegen(nummerDaten);
-                    nummernDaten.splice(index, 1);
-                }
-
-                nummerListe.appendChild(listItem);
+                li.appendChild(entfernenButton);
+                ul.appendChild(li);
             });
 
-            speichernInLocalStorage();
+            // Entferne erledigte Einträge aus der aktuellen Liste
+            nummerListe = nummerListe.filter(item => item.verbleibendeZeit > 0);
+
+            // Aktualisiere die erledigte Liste
+            const erledigteDiv = document.getElementById('erledigteListe');
+            erledigteDiv.innerHTML = ''; // Liste leeren
+            erledigteListe.forEach(item => {
+                const div = document.createElement('div');
+                div.textContent = `Nummer: ${item.nummer}, THRPYECES: ${item.thrapyeces}, Status: ${item.status}`;
+                div.className = 'erreicht';
+                erledigteDiv.appendChild(div);
+            });
         }
 
-        // Laden der gespeicherten Daten und initialisieren des Mining-Anzeige-Bereichs beim Laden der Seite
-        document.addEventListener('DOMContentLoaded', (event) => {
-            ladenAusLocalStorage();
-            startMiningAnzeige();
-        });
-
-        function erledigteEintraegeHinzufuegen(nummerDaten) {
-            const erledigteListeBody = document.getElementById('erledigteListe').querySelector('tbody');
-            const neueZeile = erledigteListeBody.insertRow();
-            const zelleNummer = neueZeile.insertCell(0);
-            const zelleThrapyeces = neueZeile.insertCell(1);
-            const zelleStatus = neueZeile.insertCell(2);
-
-            zelleNummer.textContent = nummerDaten.nummer;
-            zelleThrapyeces.textContent = nummerDaten.thrapyeces;
-            zelleStatus.textContent = 'Done';
-        }
-
-        function startMiningAnzeige() {
-            if (miningAnzeigeTimer) {
-                clearInterval(miningAnzeigeTimer);
+        // Mining-Animation
+        function miningAnimation() {
+            if (nummerListe.length === 0) {
+                return;
             }
 
-            miningAnzeigeTimer = setInterval(() => {
-                if (nummernDaten.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * nummernDaten.length);
-                    const zufaelligeNummerDaten = nummernDaten[randomIndex];
+            miningIndex = (miningIndex + 1) % nummerListe.length; // Nächster Index oder zurück auf 0
+            const aktiveNummer = nummerListe[miningIndex];
 
-                    document.getElementById('aktiveNummerAnzeige').textContent = zufaelligeNummerDaten.nummer;
-                    document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: ' + (new Date() - new Date(zufaelligeNummerDaten.erfassungszeit)) / 1000 + ' Sekunden';
-                    document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: ' + zufaelligeNummerDaten.thrapyeces;
-                }
-            }, 5000);
+            document.getElementById('aktiveNummerAnzeige').textContent = aktiveNummer.nummer;
+            document.getElementById('aktiveZeitAnzeige').textContent = `Zeit: ${aktiveNummer.verbleibendeZeit.toFixed(2)} Sekunden`;
+            document.getElementById('aktiveThrapyecesAnzeige').textContent = `THRPYECES: ${aktiveNummer.thrapyeces}`;
         }
+
+        // Sekündlicher Timer, um die Liste und THRPYECES zu aktualisieren
+        setInterval(() => {
+            nummerListe.forEach(item => {
+                // THRPYECES im Verhältnis zur verbleibenden Zeit erhöhen
+                const verstricheneSekunden = (new Date() - item.erstellungszeit) / 1000;
+                if (verstricheneSekunden < item.zielZeit) {
+                    const prozentsatz = verstricheneSekunden / item.zielZeit;
+                    item.thrapyeces += (1 - prozentsatz) * 10; // Oder eine andere Formel, die den THRPYECES-Wert erhöht
+                }
+            });
+
+            aktualisiereNummerListe(); // Aktualisiere die Anzeige
+        }, 1000);
+
+        // Mining-Animations-Timer
+        setInterval(miningAnimation, 5000); // Alle 5 Sekunden wechseln
     </script>
 </body>
 </html>
