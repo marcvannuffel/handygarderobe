@@ -7,83 +7,66 @@
     <title>Handy Garderobe</title>
     <style>
         body {
+            font-family: 'Courier New', Courier, monospace;
             background-color: black;
-            font-family: 'Courier New', Courier, monospace; /* Schriftart ähnlich derjenigen in alten Terminals */
-            color: #33ff00; /* Das klassische Grün */
+            color: green;
             font-size: 16px;
         }
-
         #titel {
             position: fixed;
             bottom: 10px;
             right: 10px;
-            font-size: smaller;
-            color: #555;
+            font-size: 12px;
         }
-
-        h2 {
-            border-bottom: 1px solid #33ff00;
+        #erfassungsFormular input, #erfassungsFormular button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background: black;
+            color: green;
+            border: 1px solid green;
         }
-
-        button {
-            background-color: black;
-            color: #33ff00;
-            border: 1px solid #33ff00;
-            padding: 5px 10px;
-            cursor: pointer;
+        #erfassungsFormular button {
+            background: green;
+            color: black;
         }
-
-        button:hover {
-            background-color: #1a1a1a;
+        #miningAnzeigeBereich, #erledigteListe, #nummerListe {
+            border: 1px solid green;
+            padding: 10px;
+            margin-top: 20px;
         }
-
-        ul, table {
-            list-style-type: none;
-            padding: 0;
-        }
-
         .erreicht::after {
             content: '✓';
-            color: #33ff00;
+            color: lime;
         }
-
-        #miningAnzeigeBereich {
-            border: 1px solid #33ff00;
-        }
-
-        /* Sie können hier weitere Stile hinzufügen oder anpassen, um das gewünschte Aussehen zu erreichen */
     </style>
 </head>
 <body>
     <div id="titel">
-        HandyGarberobe 1.0<br>
-        Idea by Carla & dudagroup.com coded by an AI
+        HandyGarberobe 1.0 <br>
+        <span>Idea by Carla & dudagroup.com coded by an AI</span>
     </div>
 
-    <!-- Hier Ihr Formular und andere HTML-Elemente -->
-    <div id="eingabeBereich">
-        <input type="number" id="nummerEingabe" placeholder="Nummer eingeben" required>
+    <!-- Erfassungsformular -->
+    <div id="erfassungsFormular">
+        <input type="text" id="nummerInput" placeholder="Nummer">
+        <input type="number" id="zielZeitInput" placeholder="Zielzeit in Sekunden">
+        <input type="number" id="thrapyecesInput" placeholder="THRPYECES" value="1000000">
         <button onclick="nummerHinzufuegen()">It's MINE</button>
     </div>
 
+    <!-- Aktuelle Liste -->
     <h2>Aktuelle Liste</h2>
     <ul id="nummerListe"></ul>
 
+    <!-- Erledigte Einträge -->
     <h2>Erledigte Einträge</h2>
-    <table id="erledigteListe">
-        <thead>
-            <tr>
-                <th>Nummer</th>
-                <th>THRPYECES</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Abgeschlossene Einträge werden hier aufgelistet -->
-        </tbody>
-    </table>
+    <div id="erledigteListe">
+        <!-- Completed entries will be listed here -->
+    </div>
 
-    <div id="miningAnzeigeBereich" style="position: fixed; top: 20px; right: 20px; padding: 20px; border: 1px solid black;">
+    <!-- Mining Anzeige -->
+    <div id="miningAnzeigeBereich">
         <h2>Mining</h2>
         <div id="aktiveNummerAnzeige">--</div>
         <div id="aktiveZeitAnzeige">Zeit: --</div>
