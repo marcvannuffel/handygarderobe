@@ -28,7 +28,7 @@
 
 <script>
   let nummernDaten = [];
-let zielZeitInMillisekunden = 4 * 60 * 60 * 1000; // Standard auf 4 Stunden
+let zielZeitInMillisekunden = 4 * 60 * 60 * 1000; // Standardmäßig auf 4 Stunden gesetzt
 
 function zielzeitSetzen() {
   const stunden = document.getElementById('zielZeit').value;
@@ -55,8 +55,18 @@ function nummerHinzufuegen() {
 
 function aktualisiereNummer(nummerInfo) {
   const aktuelleZeit = new Date();
-  const differenz = aktuelleZeit - nummerInfo.erfassungszeit;
-  const prozent = Math.min(differenz / zielZeitInMillisekunden * 100, 100);
+  const differenz = zielZeitInMillisekunden - (aktuelleZeit - nummerInfo.erfassungszeit); // Berechnet die verbleibende Zeit
+  const prozent = Math.min((aktuelleZeit - nummerInfo.erfassungszeit) / zielZeitInMillisekunden * 100, 100);
+
+  if (differenz <= 0) {
+    clearInterval(nummerInfo.timer);
+    nummerInfo.timer = null;
+  }
+
+  // Berechnung der verbleibenden Stunden, Minuten und Sekunden
+  const verbleibendeStunden = Math.floor(differenz / (1000 * 60 * 60));
+  const verbleibendeMinuten = Math.floor((differenz % (1000 * 60 * 60)) / (1000 * 60));
+  const verbleibendeSekunden = Math.floor((differenz % (1000 * 60)) / 1000);
 
   // Farbübergang von Rot zu Grün
   const rot = (100 - prozent) * 2.55;
@@ -67,16 +77,22 @@ function aktualisiereNummer(nummerInfo) {
   if (liElement) {
     liElement.style.color = farbe;
 
-    if (prozent >= 100) {
+    // Aktualisieren des Textinhalts mit Countdown
+    liElement.textContent = `Nummer: ${nummerInfo.nummer} | Verbleibend: ${verbleibendeStunden}h ${verbleibendeMinuten}m ${verbleibendeSekunden}s`;
+    if (nummerInfo.timer === null) {
       liElement.classList.add('erreicht');
+      liElement.textContent += " (Erreicht)";
     }
 
-    // Sortieren und hervorheben, wenn das Ziel erreicht ist
-    if (prozent >= 100) {
+    // Löschen-Button sollte beibehalten werden, auch wenn der Text aktualisiert wird
+    const loeschButton = document.createElement('button');
+    loeschButton.textContent = 'Löschen';
+    loeschButton.onclick = function() {
       clearInterval(nummerInfo.timer);
-      nummernDaten = nummernDaten.sort((a, b) => (a.erfassungszeit > b.erfassungszeit) ? 1 : -1);
-      listeAktualisieren(); // Neuzeichnen der Liste in sortierter Reihenfolge
-    }
+      nummernDaten = nummernDaten.filter(info => info.nummer !== nummerInfo.nummer);
+      listeAktualisieren();
+    };
+    liElement.appendChild(loeschButton);
   }
 }
 
@@ -87,24 +103,27 @@ function listeAktualisieren() {
   nummernDaten.forEach(nummerInfo => {
     const li = document.createElement('li');
     li.id = 'nummer-' + nummerInfo.nummer;
-    li.textContent = `Nummer: ${nummerInfo.nummer}`;
-    
+    li.textContent = `Nummer: ${nummerInfo.nummer}`; // Initialer Text, wird später im Countdown aktualisiert
+
     const loeschButton = document.createElement('button');
     loeschButton.textContent = 'Löschen';
     loeschButton.onclick = function() {
-      // Eintrag entfernen und Timer stoppen
       clearInterval(nummerInfo.timer);
       nummernDaten = nummernDaten.filter(info => info.nummer !== nummerInfo.nummer);
       listeAktualisieren();
     };
-    
+
     li.appendChild(loeschButton);
     nummerListe.appendChild(li);
+
+    // Erstes Update direkt nach dem Erstellen des Listenelements
+    aktualisiereNummer(nummerInfo);
   });
 }
 
 // Initialisiert das Ziel beim ersten Laden
 zielzeitSetzen();
+
 </script>
 
 </body>
