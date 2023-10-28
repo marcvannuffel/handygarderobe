@@ -179,11 +179,45 @@
         }
 
         function aktualisiereErledigteListe() {
-            // Funktion, um die erledigten Aufgaben anzuzeigen. Diese können aus dem localStorage geholt und ähnlich wie die Hauptaufgaben angezeigt werden.
+            const listeDiv = document.getElementById('erledigteListe');
+            listeDiv.innerHTML = ''; // Erledigte Liste leeren
+        
+            erledigteListe.forEach((item) => {
+                const eintragDiv = document.createElement('div');
+                eintragDiv.className = 'eintrag';
+                eintragDiv.innerHTML = `
+                    <div>Nummer: ${item.nummer}</div>
+                    <div>THRPYECES: ${Math.floor(item.thrapyeces)}</div>
+                `;
+                listeDiv.appendChild(eintragDiv);
+            });
         }
 
         function aktualisiereMiningAnzeige() {
-            // Funktion, um Mining-Informationen wie die aktive Nummer, die verbleibende Zeit und THRPYECES oben rechts auf der Seite anzuzeigen. Dies erfordert möglicherweise die Auswahl eines Elements aus Ihrer nummerListe und die Anzeige der Details.
+            const minAnzeige = document.getElementById('miningAnzeigeBereich');
+            if (nummerListe.length === 0) {
+                minAnzeige.innerHTML = `
+                    <h2>Mining</h2>
+                    <div>Keine aktiven Einträge</div>
+                `;
+            } else {
+                const zufaelligerIndex = Math.floor(Math.random() * nummerListe.length);
+                const aktiverEintrag = nummerListe[zufaelligerIndex];
+                
+                // Zeitformatierung für die Anzeige
+                const verbleibendeSekunden = Math.max(aktiverEintrag.verbleibendeZeit, 0);
+                const stunden = Math.floor(verbleibendeSekunden / 3600);
+                const minuten = Math.floor((verbleibendeSekunden % 3600) / 60);
+                const sekunden = Math.floor(verbleibendeSekunden % 60);
+                const verbleibendeZeitString = [stunden, minuten, sekunden].map(v => v.toString().padStart(2, '0')).join(':');
+        
+                minAnzeige.innerHTML = `
+                    <h2>Mining</h2>
+                    <div id="aktiveNummerAnzeige">Nummer: ${aktiverEintrag.nummer}</div>
+                    <div id="aktiveZeitAnzeige">Verbleibende Zeit: ${verbleibendeZeitString}</div>
+                    <div id="aktiveThrapyecesAnzeige">THRPYECES: ${Math.floor(aktiverEintrag.thrapyeces)}</div>
+                `;
+            }
         }
 
         function anwendungZuruecksetzen() {
@@ -202,11 +236,20 @@
             }
         }
 
+        function starteMiningRefresh() {
+            if (!miningInterval) {
+                miningInterval = setInterval(aktualisiereMiningAnzeige, 1000); // Jede Sekunde aktualisieren
+            }
+        }
+
         // Beim Laden der Seite initiale Aktualisierung und Start des Refresh-Intervalls
         window.onload = function() {
             aktualisiereNummerListe();
+            aktualisiereErledigteListe(); // Stellen Sie sicher, dass dies beim Laden der Seite aufgerufen wird
             starteRefreshListe();
+            starteMiningRefresh(); // Starten Sie das Mining-Refresh-Intervall, wenn die Seite geladen wird
         };
+
     </script>
 </body>
 </html>
