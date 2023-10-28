@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Handy Garderobe</title>
+<style>
+  /* Basis-CSS für die Liste, kann erweitert werden */
+  .erreicht { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Handy Garderobe</h1>
+
+<label for="nummerInput">Handynummer eingeben:</label>
+<input type="text" id="nummerInput">
+<button onclick="nummerHinzufuegen()">Erfassen</button>
+
+<br><br>
+
+<label for="zielZeit">Zielzeit in Stunden:</label>
+<input type="number" id="zielZeit" value="4" min="0"> <!-- Standard auf 4 Stunden gesetzt -->
+<button onclick="zielzeitSetzen()">Zielzeit setzen</button>
+
+<h2>Liste der erfassten Nummern</h2>
+<ul id="nummerListe"></ul>
+
+<script>
+  let nummernDaten = [];
+let zielZeitInMillisekunden = 4 * 60 * 60 * 1000; // Standard auf 4 Stunden
+
+function zielzeitSetzen() {
+  const stunden = document.getElementById('zielZeit').value;
+  zielZeitInMillisekunden = stunden * 60 * 60 * 1000; // Umrechnung in Millisekunden
+}
+
+function nummerHinzufuegen() {
+  const nummer = document.getElementById('nummerInput').value;
+  const jetzt = new Date();
+  const nummerInfo = {
+    nummer,
+    erfassungszeit: jetzt,
+    timer: null,
+  };
+
+  nummerInfo.timer = setInterval(() => {
+    aktualisiereNummer(nummerInfo);
+  }, 1000);
+
+  nummernDaten.push(nummerInfo);
+  listeAktualisieren();
+  document.getElementById('nummerInput').value = '';
+}
+
+function aktualisiereNummer(nummerInfo) {
+  const aktuelleZeit = new Date();
+  const differenz = aktuelleZeit - nummerInfo.erfassungszeit;
+  const prozent = Math.min(differenz / zielZeitInMillisekunden * 100, 100);
+
+  // Farbübergang von Rot zu Grün
+  const rot = (100 - prozent) * 2.55;
+  const gruen = prozent * 2.55;
+  const farbe = `rgb(${rot}, ${gruen}, 0)`;
+
+  const liElement = document.getElementById('nummer-' + nummerInfo.nummer);
+  if (liElement) {
+    liElement.style.color = farbe;
+
+    if (prozent >= 100) {
+      liElement.classList.add('erreicht');
+    }
+
+    // Sortieren und hervorheben, wenn das Ziel erreicht ist
+    if (prozent >= 100) {
+      clearInterval(nummerInfo.timer);
+      nummernDaten = nummernDaten.sort((a, b) => (a.erfassungszeit > b.erfassungszeit) ? 1 : -1);
+      listeAktualisieren(); // Neuzeichnen der Liste in sortierter Reihenfolge
+    }
+  }
+}
+
+function listeAktualisieren() {
+  const nummerListe = document.getElementById('nummerListe');
+  nummerListe.innerHTML = ''; // Liste leeren
+
+  nummernDaten.forEach(nummerInfo => {
+    const li = document.createElement('li');
+    li.id = 'nummer-' + nummerInfo.nummer;
+    li.textContent = `Nummer: ${nummerInfo.nummer}`;
+    
+    const loeschButton = document.createElement('button');
+    loeschButton.textContent = 'Löschen';
+    loeschButton.onclick = function() {
+      // Eintrag entfernen und Timer stoppen
+      clearInterval(nummerInfo.timer);
+      nummernDaten = nummernDaten.filter(info => info.nummer !== nummerInfo.nummer);
+      listeAktualisieren();
+    };
+    
+    li.appendChild(loeschButton);
+    nummerListe.appendChild(li);
+  });
+}
+
+// Initialisiert das Ziel beim ersten Laden
+zielzeitSetzen();
+</script>
+
+</body>
+</html>
