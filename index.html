@@ -47,6 +47,11 @@
             padding: 10px;
             border: 1px solid green;
         }
+        #miningAnzeigeBereich {
+            position: fixed; /* Position oben rechts festlegen */
+            top: 10px;
+            right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -94,8 +99,7 @@
         // Definieren Sie globale Variablen
         let nummerListe = JSON.parse(localStorage.getItem('nummerListe')) || [];
         let erledigteListe = JSON.parse(localStorage.getItem('erledigteListe')) || [];
-        let miningIndex = 0;
-        let miningInterval;
+        let miningInterval, refreshListInterval;
 
         function nummerHinzufuegen() {
             const nummer = document.getElementById('nummerInput').value.trim();
@@ -128,99 +132,81 @@
             localStorage.setItem('nummerListe', JSON.stringify(nummerListe));
 
             aktualisiereNummerListe();
+            starteRefreshListe();
         }
 
         function aktualisiereNummerListe() {
             const listeDiv = document.getElementById('nummerListe');
             listeDiv.innerHTML = ''; // Aktuelle Liste leeren
 
+            // Sortieren der Liste in absteigender Reihenfolge nach Nummer
+            nummerListe.sort((a, b) => b.nummer.localeCompare(a.nummer));
+
             nummerListe.forEach((item, index) => {
                 const verstricheneSekunden = (new Date() - new Date(item.erstellungszeit)) / 1000;
                 const verbleibendeSekunden = Math.max(item.zielZeit - verstricheneSekunden, 0);
                 const thrapyecesProSekunde = item.zielThrapyeces / item.zielZeit;
 
-                const eintragDiv = document.createElement('div');
-                eintragDiv.className = 'eintrag';
+                // Umrechnung der verbleibenden Sekunden in Stunden, Minuten und Sekunden
+                const stunden = Math.floor(verbleibendeSekunden / 3600);
+                const minuten = Math.floor((verbleibendeSekunden % 3600) / 60);
+                const sekunden = Math.floor(verbleibendeSekunden % 60);
 
-                eintragDiv.innerHTML = `
-                    Nummer: ${item.nummer} <br>
-                    Verbleibende Zeit: ${verbleibendeSekunden.toFixed(2)}s <br>
-                    THRPYECES: ${Math.min(item.thrapyeces + (verstricheneSekunden * thrapyecesProSekunde), item.zielThrapyeces).toFixed(2)}
-                    <button onclick="nummerEntfernen(${index})">Löschen</button>
-                `;
+                const verbleibendeZeitString = [stunden, minuten, sekunden].map(v => v.toString().padStart(2, '0')).join(':');
 
-                if (verbleibendeSekunden <= 0) {
-                    eintragDiv.classList.add('erreicht');
-                    if (!erledigteListe.includes(item.nummer)) {
-                        erledigteListe.push(item.nummer);
-                        localStorage.setItem('erledigteListe', JSON.stringify(erledigteListe));
-                    }
+                // Thrapyeces-Berechnung
+                item.thrapyeces = Math.min(item.thrapyeces + (verstricheneSekunden * thrapyecesProSekunde), item.zielThrapyeces);
+                if (verbleibendeSekunden <= 0 && !erledigteListe.includes(item)) {
+                    erledigteListe.push(item); // Zu erledigten Aufgaben hinzufügen
+                    nummerListe.splice(index, 1); // Von der Hauptliste entfernen
+                    localStorage.setItem('erledigteListe', JSON.stringify(erledigteListe));
+                    localStorage.setItem('nummerListe', JSON.stringify(nummerListe));
                 }
 
+                // Elemente zur Anzeige erstellen
+                const eintragDiv = document.createElement('div');
+                eintragDiv.className = 'eintrag';
+                eintragDiv.innerHTML = `
+                    <div>Nummer: ${item.nummer}</div>
+                    <div>Verbleibende Zeit: ${verbleibendeZeitString}</div>
+                    <div>THRPYECES: ${Math.floor(item.thrapyeces)}</div>
+                `;
                 listeDiv.appendChild(eintragDiv);
             });
 
-            // Mining-Status aktualisieren
-            if (nummerListe.length > 0) {
-                startMining();
-            } else {
-                stopMining();
-            }
+            aktualisiereErledigteListe();
+            aktualisiereMiningAnzeige();
         }
 
-        function nummerEntfernen(index) {
-            if (confirm('Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?')) {
-                nummerListe.splice(index, 1);
-                localStorage.setItem('nummerListe', JSON.stringify(nummerListe));
+        function aktualisiereErledigteListe() {
+            // Funktion, um die erledigten Aufgaben anzuzeigen. Diese können aus dem localStorage geholt und ähnlich wie die Hauptaufgaben angezeigt werden.
+        }
+
+        function aktualisiereMiningAnzeige() {
+            // Funktion, um Mining-Informationen wie die aktive Nummer, die verbleibende Zeit und THRPYECES oben rechts auf der Seite anzuzeigen. Dies erfordert möglicherweise die Auswahl eines Elements aus Ihrer nummerListe und die Anzeige der Details.
+        }
+
+        function anwendungZuruecksetzen() {
+            if (confirm('Sind Sie sicher, dass Sie zurücksetzen möchten? Dies kann nicht rückgängig gemacht werden.')) {
+                localStorage.clear(); // Löscht alle gespeicherten Daten
+                nummerListe = [];
+                erledigteListe = [];
                 aktualisiereNummerListe();
             }
         }
 
-        function startMining() {
-            if (!miningInterval) {
-                miningInterval = setInterval(() => {
-                    if (nummerListe.length === 0) {
-                        clearInterval(miningInterval);
-                        miningInterval = null;
-                        return;
-                    }
-
-                    miningIndex = Math.floor(Math.random() * nummerListe.length);
-                    const aktiverEintrag = nummerListe[miningIndex];
-
-                    document.getElementById('aktiveNummerAnzeige').textContent = aktiverEintrag.nummer;
-                    document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: ' + aktiverEintrag.verbleibendeZeit.toFixed(2) + 's';
-                    document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: ' + aktiverEintrag.thrapyeces.toFixed(2);
-
-                    // Nach 5 Sekunden Mining-Anzeige aktualisieren
-                    setTimeout(() => {
-                        aktualisiereNummerListe();
-                    }, 5000);
-                }, 5000);
+        function starteRefreshListe() {
+            // Alle 5 Sekunden Liste aktualisieren
+            if (!refreshListInterval) {
+                refreshListInterval = setInterval(aktualisiereNummerListe, 5000);
             }
         }
 
-        function stopMining() {
-            if (miningInterval) {
-                clearInterval(miningInterval);
-                miningInterval = null;
-                document.getElementById('aktiveNummerAnzeige').textContent = '--';
-                document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: --';
-                document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: --';
-            }
-        }
-
-        function anwendungZuruecksetzen() {
-            if (confirm('Möchten Sie wirklich alle Daten zurücksetzen und neu starten?')) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
-        // Initialisiere die Liste beim Laden der Seite
-        document.addEventListener('DOMContentLoaded', () => {
+        // Beim Laden der Seite initiale Aktualisierung und Start des Refresh-Intervalls
+        window.onload = function() {
             aktualisiereNummerListe();
-        });
+            starteRefreshListe();
+        };
     </script>
 </body>
 </html>
