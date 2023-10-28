@@ -155,7 +155,13 @@
                 const verbleibendeZeitString = [stunden, minuten, sekunden].map(v => v.toString().padStart(2, '0')).join(':');
 
                 // Thrapyeces-Berechnung
-                item.thrapyeces = Math.min(item.thrapyeces + (verstricheneSekunden * thrapyecesProSekunde), item.zielThrapyeces);
+                // item.thrapyeces = Math.min(item.thrapyeces + (verstricheneSekunden * thrapyecesProSekunde), item.zielThrapyeces);
+                // Berechnung des Prozentsatzes der verstrichenen Zeit
+                const prozentsatzVerstricheneZeit = Math.min(verstricheneSekunden / item.zielZeit, 1); // Maximal 1
+                
+                // Berechnung der Thrapyeces basierend auf der verstrichenen Zeit
+                item.thrapyeces = item.zielThrapyeces * prozentsatzVerstricheneZeit; // Thrapyeces proportional zur verstrichenen Zeit
+                
                 if (verbleibendeSekunden <= 0 && !erledigteListe.includes(item)) {
                     erledigteListe.push(item); // Zu erledigten Aufgaben hinzufügen
                     nummerListe.splice(index, 1); // Von der Hauptliste entfernen
