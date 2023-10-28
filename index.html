@@ -52,13 +52,13 @@
 
     <!-- Erfassungsformular -->
     <div id="erfassungsFormular">
-        <label for="nummerInput">Nummer:</label> <!-- Beschriftung hinzugefügt -->
+        <label for="nummerInput">Nummer:</label>
         <input type="text" id="nummerInput" placeholder="Nummer">
         
-        <label for="zielZeitInput">Zielzeit (Stunden):</label> <!-- Beschriftung hinzugefügt -->
+        <label for="zielZeitInput">Zielzeit (Stunden):</label>
         <input type="number" id="zielZeitInput" placeholder="Zielzeit in Stunden" min="0" step="0.01" value="4">
         
-        <label for="thrapyecesInput">THRPYECES:</label> <!-- Beschriftung hinzugefügt -->
+        <label for="thrapyecesInput">THRPYECES:</label>
         <input type="number" id="thrapyecesInput" placeholder="THRPYECES" min="1" value="1000000">
         
         <button onclick="nummerHinzufuegen()">It's MINE</button>
@@ -156,43 +156,78 @@
         }
 
         function aktualisiereErledigteListe() {
-            const erledigteDiv = document.getElementById('erledigteListe');
-            erledigteDiv.innerHTML = ''; // Aktuelle Liste leeren
+            const erledigteListeElement = document.getElementById('erledigteListe');
+            erledigteListeElement.innerHTML = ''; // Aktuelle Liste leeren
 
-            erledigteListe.forEach(item => {
-                const div = document.createElement('div');
-                div.textContent = `Nummer: ${item.nummer}, THRPYECES: ${item.thrapyeces}, Status: done`;
-                div.className = 'erreicht';
-                erledigteDiv.appendChild(div);
+            erledigteListe.forEach((item, index) => {
+                const liElement = document.createElement('li');
+                liElement.textContent = `Nummer: ${item.nummer}, THRPYECES: ${Math.floor(item.thrapyeces)}`;
+                liElement.className = 'erreicht';
+
+                const loeschButton = document.createElement('button');
+                loeschButton.textContent = 'Löschen';
+                loeschButton.onclick = function() {
+                    if (confirm('Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?')) {
+                        // Doppelte Bestätigung
+                        if (confirm('Bitte bestätigen Sie erneut, um diesen Eintrag endgültig zu löschen.')) {
+                            erledigteListe.splice(index, 1); // Element aus der Liste entfernen
+                            localStorage.setItem('erledigteListe', JSON.stringify(erledigteListe)); // LocalStorage aktualisieren
+                            aktualisiereErledigteListe(); // Liste erneut aktualisieren
+                        }
+                    }
+                };
+
+                liElement.appendChild(loeschButton);
+                erledigteListeElement.appendChild(liElement);
             });
         }
 
-        // Mining-Animation
+        // Animations-Loop für das "Mining"
         function miningAnimation() {
             if (nummerListe.length === 0) {
-                return;
+                // Wenn keine Nummern vorhanden sind
+                document.getElementById('aktiveNummerAnzeige').textContent = '--';
+                document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: --';
+                document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: --';
+            } else {
+                // Rotieren durch die Nummernliste
+                if (miningIndex >= nummerListe.length) {
+                    miningIndex = 0; // Zurücksetzen des Index
+                }
+
+                const aktivesElement = nummerListe[miningIndex];
+                document.getElementById('aktiveNummerAnzeige').textContent = aktivesElement.nummer;
+                document.getElementById('aktiveZeitAnzeige').textContent = 'Zeit: ' + new Date(aktivesElement.verbleibendeZeit * 1000).toISOString().substr(11, 8);
+                document.getElementById('aktiveThrapyecesAnzeige').textContent = 'THRPYECES: ' + Math.floor(aktivesElement.thrapyeces);
+
+                miningIndex++;
             }
 
-            miningIndex = (miningIndex + 1) % nummerListe.length; // Nächster Index oder zurück auf 0
-            const aktiveNummer = nummerListe[miningIndex];
-
-            document.getElementById('aktiveNummerAnzeige').textContent = aktiveNummer.nummer;
-            document.getElementById('aktiveZeitAnzeige').textContent = `Zeit: ${new Date(aktiveNummer.verbleibendeZeit * 1000).toISOString().substr(11, 8)}`;
-            document.getElementById('aktiveThrapyecesAnzeige').textContent = `THRPYECES: ${Math.floor(aktiveNummer.thrapyeces)}`;
+            requestAnimationFrame(miningAnimation);
         }
 
         // Sekündlicher Timer, um die Liste und THRPYECES zu aktualisieren
         setInterval(() => {
             aktualisiereNummerListe(); // Aktualisiere die Anzeige
+            // Einträge, die die Bedingung erfüllen, automatisch in die erledigte Liste verschieben
+            nummerListe.forEach((item, index) => {
+                if (item.verbleibendeZeit <= 0 && item.thrapyeces >= item.zielThrapyeces && !erledigteListe.includes(item)) {
+                    erledigteListe.push(item);
+                    nummerListe.splice(index, 1); // Element aus der aktuellen Liste entfernen
+                    localStorage.setItem('erledigteListe', JSON.stringify(erledigteListe)); // LocalStorage aktualisieren
+                    localStorage.setItem('nummerListe', JSON.stringify(nummerListe)); // Aktualisierte aktuelle Liste speichern
+                }
+            });
+            aktualisiereErledigteListe(); // Aktualisiere die Liste der erledigten Einträge
         }, 1000);
 
-        // Mining-Animations-Timer
-        setInterval(miningAnimation, 5000); // Alle 5 Sekunden wechseln
+        // Start der Mining-Animation, wenn die Seite geladen wird
+        miningAnimation();
 
         // Initialisierung beim Laden der Seite
         window.onload = () => {
             aktualisiereNummerListe();
-            aktualisiereErledigteListe();
+            aktualisiereErledigteListe(); // Stellen Sie sicher, dass die Liste beim Laden der Seite aktualisiert wird
         };
     </script>
 </body>
