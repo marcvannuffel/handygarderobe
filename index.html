@@ -12,6 +12,9 @@
             color: green;
             font-size: 16px;
         }
+        label {
+            margin-right: 10px; /* Abstand zwischen Label und Eingabefeld */
+        }
         #titel {
             position: fixed;
             bottom: 10px;
@@ -49,9 +52,15 @@
 
     <!-- Erfassungsformular -->
     <div id="erfassungsFormular">
-        <input type="text" id="nummerInput" placeholder="HandyGarderobenNummer">
-        <input type="number" id="zielZeitInput" placeholder="Zielzeit in Stunden" min="0" step="0.01" value="4"> <!-- Voreingestellter Wert hier -->
-        <input type="number" id="thrapyecesInput" placeholder="THRPYECES" min="1" value="1000000"> <!-- Voreingestellter Wert hier -->
+        <label for="nummerInput">Nummer:</label> <!-- Beschriftung hinzugefügt -->
+        <input type="text" id="nummerInput" placeholder="Nummer">
+        
+        <label for="zielZeitInput">Zielzeit (Stunden):</label> <!-- Beschriftung hinzugefügt -->
+        <input type="number" id="zielZeitInput" placeholder="Zielzeit in Stunden" min="0" step="0.01" value="4">
+        
+        <label for="thrapyecesInput">THRPYECES:</label> <!-- Beschriftung hinzugefügt -->
+        <input type="number" id="thrapyecesInput" placeholder="THRPYECES" min="1" value="1000000">
+        
         <button onclick="nummerHinzufuegen()">It's MINE</button>
     </div>
 
