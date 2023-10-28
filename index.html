@@ -16,7 +16,7 @@
             position: fixed;
             bottom: 10px;
             right: 10px;
-            color: green; /* Stellen Sie sicher, dass der Footer-Text grün ist */
+            color: green; 
         }
         #erfassungsFormular input, #erfassungsFormular button {
             display: block;
@@ -39,7 +39,6 @@
             content: '✓';
             color: lime;
         }
-        /* Zusätzlicher Stil für Einträge, die das Ziel erreicht haben, könnte hier hinzugefügt werden. */
     </style>
 </head>
 <body>
@@ -52,7 +51,7 @@
     <div id="erfassungsFormular">
         <input type="text" id="nummerInput" placeholder="Nummer">
         <input type="number" id="zielZeitInput" placeholder="Zielzeit in Stunden" min="0" step="0.01">
-        <input type="number" id="thrapyecesInput" placeholder="THRPYECES" value="1000000">
+        <input type="number" id="thrapyecesInput" placeholder="THRPYECES" min="1">
         <button onclick="nummerHinzufuegen()">It's MINE</button>
     </div>
 
@@ -74,14 +73,14 @@
 
     <script>
         // Definieren Sie globale Variablen
-        let nummerListe = [];
-        const erledigteListe = [];
+        let nummerListe = JSON.parse(localStorage.getItem('nummerListe')) || [];
+        const erledigteListe = JSON.parse(localStorage.getItem('erledigteListe')) || [];
         let miningIndex = 0;
 
         function nummerHinzufuegen() {
             const nummer = document.getElementById('nummerInput').value.trim();
             const zielZeitInStunden = parseFloat(document.getElementById('zielZeitInput').value);
-            const thrapyecesStart = parseInt(document.getElementById('thrapyecesInput').value, 10);
+            const zielThrapyeces = parseInt(document.getElementById('thrapyecesInput').value, 10);
 
             // Überprüfen, ob die Nummer bereits existiert
             if (nummerListe.some(item => item.nummer === nummer)) {
@@ -89,7 +88,7 @@
                 return;
             }
 
-            if (!nummer || isNaN(zielZeitInStunden) || isNaN(thrapyecesStart)) {
+            if (!nummer || isNaN(zielZeitInStunden) || isNaN(zielThrapyeces)) {
                 alert('Bitte gültige Werte eingeben.');
                 return;
             }
@@ -99,51 +98,61 @@
                 nummer,
                 erstellungszeit: new Date(),
                 zielZeit,
-                thrapyeces: thrapyecesStart,
+                zielThrapyeces,
+                thrapyeces: 0, // Beginnt bei 0 und baut sich auf
                 verbleibendeZeit: zielZeit, // Sekunden bis zum Ziel
             };
             nummerListe.push(neuesElement);
+
+            // Update local storage
+            localStorage.setItem('nummerListe', JSON.stringify(nummerListe));
+
             aktualisiereNummerListe();
-            document.getElementById('nummerInput').value = ''; // Eingabefeld zurücksetzen
         }
 
         function aktualisiereNummerListe() {
-            const ul = document.getElementById('nummerListe');
-            ul.innerHTML = ''; // Liste leeren
+            const listeDiv = document.getElementById('nummerListe');
+            listeDiv.innerHTML = ''; // Aktuelle Liste leeren
 
-            nummerListe.forEach((item, index) => {
-                const verbleibendeSekunden = item.zielZeit - ((new Date() - item.erstellungszeit) / 1000);
-                if (verbleibendeSekunden <= 0) {
-                    erledigteListe.push({...item, status: 'done'});
-                    return; // Überspringen, wenn die Zeit abgelaufen ist
+            nummerListe.forEach(item => {
+                const verstricheneSekunden = (new Date() - new Date(item.erstellungszeit)) / 1000;
+                item.verbleibendeZeit = item.zielZeit - verstricheneSekunden;
+
+                // THRPYECES im Verhältnis zur verbleibenden Zeit erhöhen
+                if (verstricheneSekunden < item.zielZeit) {
+                    const prozentsatz = verstricheneSekunden / item.zielZeit;
+                    item.thrapyeces = prozentsatz * item.zielThrapyeces;
                 }
 
-                item.verbleibendeZeit = verbleibendeSekunden; // Aktualisiere die verbleibende Zeit
+                // Überprüfen, ob das Ziel erreicht ist
+                if (item.verbleibendeZeit <= 0 && item.thrapyeces >= item.zielThrapyeces) {
+                    item.status = 'done';
+                    erledigteListe.push(item);
 
-                const li = document.createElement('li');
-                li.textContent = `Nummer: ${item.nummer}, Verbleibende Zeit: ${verbleibendeSekunden.toFixed(2)} Sekunden, THRPYECES: ${item.thrapyeces}`;
-
-                // Button zum Entfernen
-                const entfernenButton = document.createElement('button');
-                entfernenButton.textContent = 'Entfernen';
-                entfernenButton.onclick = function() {
-                    nummerListe = nummerListe.filter((e, i) => i !== index); // Entferne diesen Eintrag
-                    aktualisiereNummerListe(); // Liste erneut aktualisieren
-                };
-
-                li.appendChild(entfernenButton);
-                ul.appendChild(li);
+                    // Update local storage for completed items
+                    localStorage.setItem('erledigteListe', JSON.stringify(erledigteListe));
+                } else {
+                    const liElement = document.createElement('li');
+                    liElement.textContent = `Nummer: ${item.nummer}, Zeit: ${new Date(item.verbleibendeZeit * 1000).toISOString().substr(11, 8)}, THRPYECES: ${Math.floor(item.thrapyeces)}`;
+                    listeDiv.appendChild(liElement);
+                }
             });
 
-            // Entferne erledigte Einträge aus der aktuellen Liste
-            nummerListe = nummerListe.filter(item => item.verbleibendeZeit > 0);
+            nummerListe = nummerListe.filter(item => item.status !== 'done'); // Entfernt erledigte Aufgaben aus der aktuellen Liste
 
-            // Aktualisiere die erledigte Liste
+            // Update local storage after filtering
+            localStorage.setItem('nummerListe', JSON.stringify(nummerListe));
+
+            aktualisiereErledigteListe();
+        }
+
+        function aktualisiereErledigteListe() {
             const erledigteDiv = document.getElementById('erledigteListe');
-            erledigteDiv.innerHTML = ''; // Liste leeren
+            erledigteDiv.innerHTML = ''; // Aktuelle Liste leeren
+
             erledigteListe.forEach(item => {
                 const div = document.createElement('div');
-                div.textContent = `Nummer: ${item.nummer}, THRPYECES: ${item.thrapyeces}, Status: ${item.status}`;
+                div.textContent = `Nummer: ${item.nummer}, THRPYECES: ${item.thrapyeces}, Status: done`;
                 div.className = 'erreicht';
                 erledigteDiv.appendChild(div);
             });
@@ -159,26 +168,23 @@
             const aktiveNummer = nummerListe[miningIndex];
 
             document.getElementById('aktiveNummerAnzeige').textContent = aktiveNummer.nummer;
-            document.getElementById('aktiveZeitAnzeige').textContent = `Zeit: ${aktiveNummer.verbleibendeZeit.toFixed(2)} Sekunden`;
-            document.getElementById('aktiveThrapyecesAnzeige').textContent = `THRPYECES: ${aktiveNummer.thrapyeces}`;
+            document.getElementById('aktiveZeitAnzeige').textContent = `Zeit: ${new Date(aktiveNummer.verbleibendeZeit * 1000).toISOString().substr(11, 8)}`;
+            document.getElementById('aktiveThrapyecesAnzeige').textContent = `THRPYECES: ${Math.floor(aktiveNummer.thrapyeces)}`;
         }
 
         // Sekündlicher Timer, um die Liste und THRPYECES zu aktualisieren
         setInterval(() => {
-            nummerListe.forEach(item => {
-                // THRPYECES im Verhältnis zur verbleibenden Zeit erhöhen
-                const verstricheneSekunden = (new Date() - item.erstellungszeit) / 1000;
-                if (verstricheneSekunden < item.zielZeit) {
-                    const prozentsatz = verstricheneSekunden / item.zielZeit;
-                    item.thrapyeces += (1 - prozentsatz) * 10; // Oder eine andere Formel, die den THRPYECES-Wert erhöht
-                }
-            });
-
             aktualisiereNummerListe(); // Aktualisiere die Anzeige
         }, 1000);
 
         // Mining-Animations-Timer
         setInterval(miningAnimation, 5000); // Alle 5 Sekunden wechseln
+
+        // Initialisierung beim Laden der Seite
+        window.onload = () => {
+            aktualisiereNummerListe();
+            aktualisiereErledigteListe();
+        };
     </script>
 </body>
 </html>
