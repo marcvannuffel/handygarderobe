@@ -194,30 +194,39 @@
         }
 
         function aktualisiereMiningAnzeige() {
-            const minAnzeige = document.getElementById('miningAnzeigeBereich');
             if (nummerListe.length === 0) {
-                minAnzeige.innerHTML = `
-                    <h2>Mining</h2>
-                    <div>Keine aktiven Einträge</div>
-                `;
-            } else {
-                const zufaelligerIndex = Math.floor(Math.random() * nummerListe.length);
-                const aktiverEintrag = nummerListe[zufaelligerIndex];
-                
-                // Zeitformatierung für die Anzeige
-                const verbleibendeSekunden = Math.max(aktiverEintrag.verbleibendeZeit, 0);
-                const stunden = Math.floor(verbleibendeSekunden / 3600);
-                const minuten = Math.floor((verbleibendeSekunden % 3600) / 60);
-                const sekunden = Math.floor(verbleibendeSekunden % 60);
-                const verbleibendeZeitString = [stunden, minuten, sekunden].map(v => v.toString().padStart(2, '0')).join(':');
+                // Wenn keine Nummern vorhanden sind, leeren Sie die Mining-Anzeige.
+                document.getElementById('miningAnzeigeBereich').innerHTML = 'Keine aktiven Minings';
+                return;
+            }
+            
+            let aktiveNummerIndex = Math.floor(Math.random() * nummerListe.length);
+            let aktiveNummerInfo = nummerListe[aktiveNummerIndex];
+            let miningAnzeigeBereich = document.getElementById('miningAnzeigeBereich');
         
-                minAnzeige.innerHTML = `
-                    <h2>Mining</h2>
-                    <div id="aktiveNummerAnzeige">Nummer: ${aktiverEintrag.nummer}</div>
-                    <div id="aktiveZeitAnzeige">Verbleibende Zeit: ${verbleibendeZeitString}</div>
-                    <div id="aktiveThrapyecesAnzeige">THRPYECES: ${Math.floor(aktiverEintrag.thrapyeces)}</div>
+            // Funktion, um die Mining-Anzeige mit den aktuellen Werten zu aktualisieren.
+            function refreshMiningInfo() {
+                // Ermitteln Sie den aktuellen Status basierend auf den Eigenschaften des aktiven Eintrags.
+                let verstricheneZeit = Math.floor((new Date() - aktiveNummerInfo.startZeit) / 1000); // in Sekunden
+                aktiveNummerInfo.verbleibendeZeit = Math.max(aktiveNummerInfo.zielZeit - verstricheneZeit, 0);
+                aktiveNummerInfo.thrapyeces = Math.min(aktiveNummerInfo.thrapyeces + verstricheneZeit * aktiveNummerInfo.thrapyecesRate, aktiveNummerInfo.zielThrapyeces);
+                
+                // Aktualisieren Sie die HTML-Inhalte der Mining-Anzeige.
+                miningAnzeigeBereich.innerHTML = `
+                    <h2>Aktive Mining-Nummer: ${aktiveNummerInfo.nummer}</h2>
+                    <p>Verbleibende Zeit: ${sekundenZuHMS(aktiveNummerInfo.verbleibendeZeit)}</p>
+                    <p>THRPYECES: ${aktiveNummerInfo.thrapyeces.toFixed(2)}</p>
                 `;
             }
+        
+            // Starten Sie den Refresh-Intervall (jede Sekunde).
+            const refreshInterval = setInterval(refreshMiningInfo, 1000);
+            
+            // Nach 3 Sekunden den Intervall beenden und eine neue Nummer wählen.
+            setTimeout(() => {
+                clearInterval(refreshInterval); // Stoppen Sie das aktuelle Update.
+                aktualisiereMiningAnzeige(); // Starten Sie die Funktion erneut, um eine neue Nummer zu wählen.
+            }, 3000);
         }
 
         function anwendungZuruecksetzen() {
