@@ -207,50 +207,52 @@
         }
 
         function aktualisiereMiningAnzeige() {
-            // Stellen Sie sicher, dass das Intervall zurückgesetzt wird, wenn es bereits läuft
             if (miningInterval) {
                 clearInterval(miningInterval);
             }
         
             let miningIndex = 0;
         
-            miningInterval = setInterval(() => {
+            // Diese Funktion wird aufgerufen, um die Anzeige zu aktualisieren.
+            function refreshMiningInfo() {
                 if (nummerListe.length === 0) {
                     clearInterval(miningInterval);
                     return;
                 }
         
-                // Hier sichern wir, dass miningIndex innerhalb des gültigen Bereichs des Arrays bleibt
                 miningIndex = miningIndex % nummerListe.length;
-        
                 const aktiverEintrag = nummerListe[miningIndex];
                 if (aktiverEintrag) {
-                    // Stellen Sie sicher, dass die Werte gültige Zahlen sind, bevor Sie Berechnungen durchführen
-                    const verbleibendeSekunden = Number(aktiverEintrag.verbleibendeZeit); // Dies sollte eine Zahl sein
-                    const thrapyeces = Number(aktiverEintrag.thrapyeces); // Dies sollte eine Zahl sein
+                    let verbleibendeSekunden = Number(aktiverEintrag.verbleibendeZeit);
+                    let thrapyeces = Number(aktiverEintrag.thrapyeces);
         
-                    if (!isNaN(verbleibendeSekunden) && !isNaN(thrapyeces)) {
-                        // Wenn beide Werte gültige Zahlen sind, führen Sie die Operationen aus
-                        const verbleibendeZeitHMS = sekundenZuHMS(verbleibendeSekunden);
-                        const thrapyecesAnzeige = thrapyeces.toFixed(2); // Nehmen Sie nur zwei Dezimalstellen
-        
-                        // Aktualisieren Sie die Anzeige mit den neuen gültigen Werten
-                        document.getElementById('aktiveZeitAnzeige').textContent = 'Verbleibende Zeit: ' + verbleibendeZeitHMS;
-                        document.getElementById('aktiveThrapyecesAnzeige').textContent = 'Typface: ' + thrapyecesAnzeige;
-                    } else {
-                        // Fehlerbehandlung, falls einer der Werte ungültig ist
+                    // Überprüfen, ob die Werte keine Zahlen sind. Wenn sie es sind, korrigieren wir das.
+                    if (isNaN(verbleibendeSekunden) || isNaN(thrapyeces)) {
                         console.error("Ungültige Werte gefunden. Verbleibende Zeit:", verbleibendeSekunden, "Typface:", thrapyeces);
+                        verbleibendeSekunden = 0; // oder einen anderen Standardwert setzen
+                        thrapyeces = 0; // oder einen anderen Standardwert setzen
+                    }
+        
+                    // Wir verwenden die korrekten Werte und stellen sicher, dass wir die Anzeige mit den gültigen Daten aktualisieren.
+                    const verbleibendeZeitHMS = sekundenZuHMS(verbleibendeSekunden);
+                    const thrapyecesAnzeige = thrapyeces.toFixed(2); // Zeigen Sie zwei Dezimalstellen für den Typface-Wert an
+        
+                    document.getElementById('aktiveZeitAnzeige').textContent = 'Verbleibende Zeit: ' + verbleibendeZeitHMS;
+                    document.getElementById('aktiveThrapyecesAnzeige').textContent = 'Typface: ' + thrapyecesAnzeige;
+        
+                    // Reduzieren Sie die verbleibende Zeit für den nächsten Tick.
+                    if (verbleibendeSekunden > 0) {
+                        aktiverEintrag.verbleibendeZeit = verbleibendeSekunden - 1; // hier wird die Zeit heruntergezählt
+                    } else {
+                        // Wenn die Zeit abgelaufen ist, können Sie hier weitere Aktionen durchführen, z. B. den Eintrag aus der Liste entfernen.
                     }
                 }
         
-                // Schalten Sie den Index um, damit der nächste Eintrag im nächsten Intervall angezeigt wird
                 miningIndex++;
+            }
         
-                // Wenn 3 Sekunden (3 Intervalle) vergangen sind, setzen Sie den miningIndex zurück, damit die gleiche Information für 3 Sekunden angezeigt bleibt
-                if (miningIndex % 3 === 0) {
-                    // Hier können Sie zusätzliche Logik hinzufügen, wenn der Index zurückgesetzt wird
-                }
-            }, 1000); // Aktualisieren jede Sekunde
+            // Hier legen wir fest, dass die Informationen jede Sekunde aktualisiert werden sollen.
+            miningInterval = setInterval(refreshMiningInfo, 1000);
         }
 
         function anwendungZuruecksetzen() {
