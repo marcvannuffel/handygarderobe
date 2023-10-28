@@ -101,19 +101,6 @@
         let erledigteListe = JSON.parse(localStorage.getItem('erledigteListe')) || [];
         let miningInterval, refreshListInterval;
 
-        function sekundenZuHMS(sekunden) {
-            let h = Math.floor(sekunden / 3600); // Stunden erhalten
-            let m = Math.floor(sekunden % 3600 / 60); // Minuten erhalten
-            let s = Math.floor(sekunden % 3600 % 60); // Sekunden erhalten
-        
-            // Werte in ein zwei Ziffern Format umwandeln
-            let hAnzeige = h < 10 ? "0" + h : h;
-            let mAnzeige = m < 10 ? "0" + m : m;
-            let sAnzeige = s < 10 ? "0" + s : s;
-        
-            return hAnzeige + ":" + mAnzeige + ":" + sAnzeige; // formatieren als "HH:MM:SS"
-        }
-        
         function nummerHinzufuegen() {
             const nummer = document.getElementById('nummerInput').value.trim();
             const zielZeitInStunden = parseFloat(document.getElementById('zielZeitInput').value);
@@ -192,67 +179,11 @@
         }
 
         function aktualisiereErledigteListe() {
-            const listeDiv = document.getElementById('erledigteListe');
-            listeDiv.innerHTML = ''; // Erledigte Liste leeren
-        
-            erledigteListe.forEach((item) => {
-                const eintragDiv = document.createElement('div');
-                eintragDiv.className = 'eintrag';
-                eintragDiv.innerHTML = `
-                    <div>Nummer: ${item.nummer}</div>
-                    <div>THRPYECES: ${Math.floor(item.thrapyeces)}</div>
-                `;
-                listeDiv.appendChild(eintragDiv);
-            });
+            // Funktion, um die erledigten Aufgaben anzuzeigen. Diese können aus dem localStorage geholt und ähnlich wie die Hauptaufgaben angezeigt werden.
         }
 
         function aktualisiereMiningAnzeige() {
-            if (miningInterval) {
-                clearInterval(miningInterval);
-            }
-        
-            let miningIndex = 0;
-        
-            // Diese Funktion wird aufgerufen, um die Anzeige zu aktualisieren.
-            function refreshMiningInfo() {
-                if (nummerListe.length === 0) {
-                    clearInterval(miningInterval);
-                    return;
-                }
-        
-                miningIndex = miningIndex % nummerListe.length;
-                const aktiverEintrag = nummerListe[miningIndex];
-                if (aktiverEintrag) {
-                    let verbleibendeSekunden = Number(aktiverEintrag.verbleibendeZeit);
-                    let thrapyeces = Number(aktiverEintrag.thrapyeces);
-        
-                    // Überprüfen, ob die Werte keine Zahlen sind. Wenn sie es sind, korrigieren wir das.
-                    if (isNaN(verbleibendeSekunden) || isNaN(thrapyeces)) {
-                        console.error("Ungültige Werte gefunden. Verbleibende Zeit:", verbleibendeSekunden, "Typface:", thrapyeces);
-                        verbleibendeSekunden = 0; // oder einen anderen Standardwert setzen
-                        thrapyeces = 0; // oder einen anderen Standardwert setzen
-                    }
-        
-                    // Wir verwenden die korrekten Werte und stellen sicher, dass wir die Anzeige mit den gültigen Daten aktualisieren.
-                    const verbleibendeZeitHMS = sekundenZuHMS(verbleibendeSekunden);
-                    const thrapyecesAnzeige = thrapyeces.toFixed(2); // Zeigen Sie zwei Dezimalstellen für den Typface-Wert an
-        
-                    document.getElementById('aktiveZeitAnzeige').textContent = 'Verbleibende Zeit: ' + verbleibendeZeitHMS;
-                    document.getElementById('aktiveThrapyecesAnzeige').textContent = 'Typface: ' + thrapyecesAnzeige;
-        
-                    // Reduzieren Sie die verbleibende Zeit für den nächsten Tick.
-                    if (verbleibendeSekunden > 0) {
-                        aktiverEintrag.verbleibendeZeit = verbleibendeSekunden - 1; // hier wird die Zeit heruntergezählt
-                    } else {
-                        // Wenn die Zeit abgelaufen ist, können Sie hier weitere Aktionen durchführen, z. B. den Eintrag aus der Liste entfernen.
-                    }
-                }
-        
-                miningIndex++;
-            }
-        
-            // Hier legen wir fest, dass die Informationen jede Sekunde aktualisiert werden sollen.
-            miningInterval = setInterval(refreshMiningInfo, 1000);
+            // Funktion, um Mining-Informationen wie die aktive Nummer, die verbleibende Zeit und THRPYECES oben rechts auf der Seite anzuzeigen. Dies erfordert möglicherweise die Auswahl eines Elements aus Ihrer nummerListe und die Anzeige der Details.
         }
 
         function anwendungZuruecksetzen() {
@@ -271,20 +202,11 @@
             }
         }
 
-        function starteMiningRefresh() {
-            if (!miningInterval) {
-                miningInterval = setInterval(aktualisiereMiningAnzeige, 1000); // Jede Sekunde aktualisieren
-            }
-        }
-
         // Beim Laden der Seite initiale Aktualisierung und Start des Refresh-Intervalls
         window.onload = function() {
             aktualisiereNummerListe();
-            aktualisiereErledigteListe(); // Stellen Sie sicher, dass dies beim Laden der Seite aufgerufen wird
             starteRefreshListe();
-            starteMiningRefresh(); // Starten Sie das Mining-Refresh-Intervall, wenn die Seite geladen wird
         };
-
     </script>
 </body>
 </html>
