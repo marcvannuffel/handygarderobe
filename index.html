@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Handy Garderobe</title>
     <style>
+        body {
+            background-color: black;
+            font-family: 'Courier New', Courier, monospace; /* Schriftart ähnlich derjenigen in alten Terminals */
+            color: #33ff00; /* Das klassische Grün */
+            font-size: 16px;
+        }
+
         #titel {
             position: fixed;
             bottom: 10px;
@@ -13,10 +20,38 @@
             font-size: smaller;
             color: #555;
         }
+
+        h2 {
+            border-bottom: 1px solid #33ff00;
+        }
+
+        button {
+            background-color: black;
+            color: #33ff00;
+            border: 1px solid #33ff00;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1a1a1a;
+        }
+
+        ul, table {
+            list-style-type: none;
+            padding: 0;
+        }
+
         .erreicht::after {
             content: '✓';
+            color: #33ff00;
         }
-        /* Weitere Styling-Regeln können Sie hier hinzufügen */
+
+        #miningAnzeigeBereich {
+            border: 1px solid #33ff00;
+        }
+
+        /* Sie können hier weitere Stile hinzufügen oder anpassen, um das gewünschte Aussehen zu erreichen */
     </style>
 </head>
 <body>
