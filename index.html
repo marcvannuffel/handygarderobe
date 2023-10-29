@@ -211,7 +211,7 @@
                 const aktiverEintrag = nummerListe[zufaelligerIndex];
 
                 const verstricheneSekunden = (new Date() - new Date(aktiverEintrag.erstellungszeit)) / 1000;
-                const prozentsatzVerstricheneZeit = Math.min(verstricheneSekunden / aktiverEintrag.zielZeit, 1); // Maximal 1
+                const prozentsatzVerstricheneZeit = Math.min(verstricheneSekunden / aktiverEintrag.zielZeit, 100); // Maximal 1
                 // Zeitformatierung für die Anzeige
                 //const verbleibendeSekunden = Math.max(aktiverEintrag.verbleibendeZeit, 0);
                 //const stunden = Math.floor(verbleibendeSekunden / 3600);
