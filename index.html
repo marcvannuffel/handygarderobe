@@ -157,7 +157,7 @@
                 // Thrapyeces-Berechnung
                 // item.thrapyeces = Math.min(item.thrapyeces + (verstricheneSekunden * thrapyecesProSekunde), item.zielThrapyeces);
                 // Berechnung des Prozentsatzes der verstrichenen Zeit
-                const prozentsatzVerstricheneZeit = Math.min(verstricheneSekunden / item.zielZeit, 1); // Maximal 1
+                const prozentsatzVerstricheneZeit = Math.min((verstricheneSekunden / item.zielZeit) * 100, 1); // Maximal 1
                 
                 // Berechnung der Thrapyeces basierend auf der verstrichenen Zeit
                 item.thrapyeces = item.zielThrapyeces * prozentsatzVerstricheneZeit; // Thrapyeces proportional zur verstrichenen Zeit
