@@ -222,10 +222,10 @@
         
                 minAnzeige.innerHTML = `
                     <h2>Mining</h2>
-                    <div id="aktiveNummerAnzeige">Paused Mobile Nummer: ${aktiverEintrag.nummer}</div>
+                    <div id="aktiveNummerAnzeige">Sleeping Mobile Nummer: ${aktiverEintrag.nummer}</div>
                     <div id="aktiveZeitAnzeige">Mining Speed: ${thrapyecesProSekunde.toFixed(3)}/Sec Thrapyeces</div>
                     <div id="aktiveThrapyecesAnzeige">Reserved THRPYECES: ${Math.floor(aktiverEintrag.thrapyeces)}</div>
-                    <div id="aktiveProgressAnzeige">Your Therapy Progress: ${Math.floor(aktiverEintrag.prozentsatzVerstricheneZeit)}%</div>
+                    <div id="aktiveProgressAnzeige">Your Therapy Progress: ${Math.floor(prozentsatzVerstricheneZeit)}%</div>
                 `;
             }
         }
