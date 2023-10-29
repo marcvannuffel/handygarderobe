@@ -211,16 +211,17 @@
                 const aktiverEintrag = nummerListe[zufaelligerIndex];
                 
                 // Zeitformatierung für die Anzeige
-                const verbleibendeSekunden = Math.max(aktiverEintrag.verbleibendeZeit, 0);
-                const stunden = Math.floor(verbleibendeSekunden / 3600);
-                const minuten = Math.floor((verbleibendeSekunden % 3600) / 60);
-                const sekunden = Math.floor(verbleibendeSekunden % 60);
-                const verbleibendeZeitString = [stunden, minuten, sekunden].map(v => v.toString().padStart(2, '0')).join(':');
+                //const verbleibendeSekunden = Math.max(aktiverEintrag.verbleibendeZeit, 0);
+                //const stunden = Math.floor(verbleibendeSekunden / 3600);
+                //const minuten = Math.floor((verbleibendeSekunden % 3600) / 60);
+                //const sekunden = Math.floor(verbleibendeSekunden % 60);
+                //const verbleibendeZeitString = [stunden, minuten, sekunden].map(v => v.toString().padStart(2, '0')).join(':');
+                thrapyecesProSekunde = aktiverEintrag.zielThrapyeces / aktiverEintrag.zielZeit;
         
                 minAnzeige.innerHTML = `
                     <h2>Mining</h2>
                     <div id="aktiveNummerAnzeige">Nummer: ${aktiverEintrag.nummer}</div>
-                    <div id="aktiveZeitAnzeige">Verbleibende Zeit: ${verbleibendeZeitString}</div>
+                    <div id="aktiveZeitAnzeige">Thrapyeces: ${thrapyecesProSekunde}/Sec</div>
                     <div id="aktiveThrapyecesAnzeige">THRPYECES: ${Math.floor(aktiverEintrag.thrapyeces)}</div>
                 `;
             }
