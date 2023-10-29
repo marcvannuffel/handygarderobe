@@ -221,8 +221,7 @@
                 thrapyecesProSekunde = aktiverEintrag.zielThrapyeces / aktiverEintrag.zielZeit;
         
                 minAnzeige.innerHTML = `
-                    <h2>Mining</h2>
-                    <div id="aktiveNummerAnzeige">Sleeping Mobile Nummer: ${aktiverEintrag.nummer}</div>
+                    <h2>Sleeping Mobile Nummer ${aktiverEintrag.nummer}</h2>
                     <div id="aktiveZeitAnzeige">Mining Speed: ${thrapyecesProSekunde.toFixed(3)}/Sec Thrapyeces</div>
                     <div id="aktiveThrapyecesAnzeige">Reserved THRPYECES: ${Math.floor(aktiverEintrag.thrapyeces)}</div>
                     <div id="aktiveProgressAnzeige">Your Therapy Progress: ${Math.floor(prozentsatzVerstricheneZeit)}%</div>
