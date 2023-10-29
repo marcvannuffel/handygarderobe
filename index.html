@@ -157,7 +157,7 @@
                 // Thrapyeces-Berechnung
                 // item.thrapyeces = Math.min(item.thrapyeces + (verstricheneSekunden * thrapyecesProSekunde), item.zielThrapyeces);
                 // Berechnung des Prozentsatzes der verstrichenen Zeit
-                const prozentsatzVerstricheneZeit = Math.min((verstricheneSekunden / item.zielZeit) * 100, 1); // Maximal 1
+                const prozentsatzVerstricheneZeit = Math.min(verstricheneSekunden / item.zielZeit, 1); // Maximal 1
                 
                 // Berechnung der Thrapyeces basierend auf der verstrichenen Zeit
                 item.thrapyeces = item.zielThrapyeces * prozentsatzVerstricheneZeit; // Thrapyeces proportional zur verstrichenen Zeit
@@ -211,7 +211,7 @@
                 const aktiverEintrag = nummerListe[zufaelligerIndex];
 
                 const verstricheneSekunden = (new Date() - new Date(aktiverEintrag.erstellungszeit)) / 1000;
-                const prozentsatzVerstricheneZeit = Math.min(verstricheneSekunden / aktiverEintrag.zielZeit, 100); // Maximal 1
+                const prozentsatzVerstricheneZeit = Math.min((verstricheneSekunden / aktiverEintrag.zielZeit)*100, 100); // Maximal 1
                 // Zeitformatierung für die Anzeige
                 //const verbleibendeSekunden = Math.max(aktiverEintrag.verbleibendeZeit, 0);
                 //const stunden = Math.floor(verbleibendeSekunden / 3600);
